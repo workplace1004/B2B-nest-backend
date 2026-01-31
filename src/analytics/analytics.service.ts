@@ -288,10 +288,30 @@ export class AnalyticsService {
 
   async getSalesReport(startDate?: Date, endDate?: Date, timeRange?: 'today' | 'week' | 'month') {
     const where: any = {};
-    if (startDate || endDate) {
+    
+    // For 'today', ensure we use the full day range
+    if (timeRange === 'today') {
+      const today = new Date();
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+      const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+      where.orderDate = {
+        gte: startOfToday,
+        lte: endOfToday,
+      };
+    } else if (startDate || endDate) {
       where.orderDate = {};
-      if (startDate) where.orderDate.gte = startDate;
-      if (endDate) where.orderDate.lte = endDate;
+      if (startDate) {
+        // Ensure startDate is at the beginning of the day
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.orderDate.gte = start;
+      }
+      if (endDate) {
+        // Ensure endDate is at the end of the day
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.orderDate.lte = end;
+      }
     }
 
     const orders = await this.prisma.order.findMany({
@@ -338,7 +358,27 @@ export class AnalyticsService {
 
     // Get previous period for comparison
     let previousPeriodRevenue = 0;
-    if (startDate && endDate) {
+    if (timeRange === 'today') {
+      // For today, compare with yesterday
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const startOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
+      const endOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999);
+      
+      const prevOrders = await this.prisma.order.findMany({
+        where: {
+          orderDate: {
+            gte: startOfYesterday,
+            lte: endOfYesterday,
+          },
+        },
+      });
+      
+      previousPeriodRevenue = prevOrders.reduce(
+        (sum, order) => sum + Number(order.totalAmount),
+        0,
+      );
+    } else if (startDate && endDate) {
       const periodDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const prevStartDate = new Date(startDate);
       prevStartDate.setDate(prevStartDate.getDate() - periodDays);
