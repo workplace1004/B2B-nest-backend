@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, CollectionLifecycle, CustomerType, OrderStatus, OrderType, PurchaseOrderStatus, ShipmentStatus } from '@prisma/client';
+import { PrismaClient, UserRole, CollectionLifecycle, CustomerType, OrderStatus, OrderType, PurchaseOrderStatus, ShipmentStatus, ReviewStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -482,6 +482,76 @@ async function main() {
   }
   console.log(`✅ Created ${purchaseOrders.length} purchase orders (from one month ago to present)`);
 
+  // Create reviews/ratings for customers
+  console.log('⭐ Creating customer reviews/ratings...');
+  const reviewSources = ['Website', 'Google', 'App Store', 'Play Store', 'Social Media'];
+  const reviewStatuses: ReviewStatus[] = [ReviewStatus.PENDING, ReviewStatus.RESPONDED, ReviewStatus.RESOLVED];
+  const reviewTexts = [
+    'Amazing experience! Highly recommend this product.',
+    'Good service but could improve support.',
+    'Loved the product, highly recommend!',
+    'Delivery was late but product quality is excellent.',
+    'Average experience, nothing special.',
+    'Excellent quality and fast shipping!',
+    'Could be better, but acceptable.',
+    'Outstanding service and product quality!',
+    'Great value for money, very satisfied.',
+    'Product met my expectations, would buy again.',
+    'Fast delivery and good packaging.',
+    'Not as described, but customer service helped resolve the issue.',
+    'Perfect product, exactly what I needed.',
+    'Good quality but shipping took longer than expected.',
+    'Very happy with my purchase, will order again.',
+  ];
+
+  const reviewCount = 2000; // Create 2000 reviews
+  let reviewsCreated = 0;
+
+  for (let i = 0; i < reviewCount; i++) {
+    // Randomly select a customer
+    const customer = randomElement(customers);
+    
+    // Randomly select a product (optional, some reviews might not have products)
+    const product = Math.random() > 0.2 ? randomElement(products) : null;
+    
+    // Generate rating (1-5 stars, weighted towards higher ratings)
+    const ratingRoll = Math.random();
+    let rating: number;
+    if (ratingRoll < 0.65) {
+      rating = 5; // 65% chance of 5 stars
+    } else if (ratingRoll < 0.85) {
+      rating = 4; // 20% chance of 4 stars
+    } else if (ratingRoll < 0.95) {
+      rating = 3; // 10% chance of 3 stars
+    } else if (ratingRoll < 0.98) {
+      rating = 2; // 3% chance of 2 stars
+    } else {
+      rating = 1; // 2% chance of 1 star
+    }
+
+    // Generate review date (from one month ago to present)
+    const reviewDate = randomDate(startDate, endDate);
+    
+    try {
+      await prisma.review.create({
+        data: {
+          customerId: customer.id,
+          productId: product?.id,
+          rating: rating,
+          review: randomElement(reviewTexts),
+          status: randomElement(reviewStatuses),
+          source: randomElement(reviewSources),
+          createdAt: reviewDate,
+        },
+      });
+      reviewsCreated++;
+    } catch (error) {
+      // Skip if there's an error (e.g., duplicate constraint)
+      console.log(`   ⚠️  Skipped review ${i + 1} due to error`);
+    }
+  }
+  console.log(`✅ Created ${reviewsCreated} customer reviews/ratings (from one month ago to present)`);
+
   // Summary
   const totalRecords = 
     users.length +
@@ -493,7 +563,8 @@ async function main() {
     customers.length +
     orders.length +
     shipmentCount +
-    purchaseOrders.length;
+    purchaseOrders.length +
+    reviewsCreated;
 
   console.log('\n✨ Seed1 completed successfully!');
   console.log('📊 Summary:');
@@ -507,6 +578,7 @@ async function main() {
   console.log(`   - Orders: ${orders.length}`);
   console.log(`   - Shipments: ${shipmentCount}`);
   console.log(`   - Purchase Orders: ${purchaseOrders.length}`);
+  console.log(`   - Reviews/Ratings: ${reviewsCreated}`);
   console.log(`   - TOTAL RECORDS: ${totalRecords}`);
 }
 

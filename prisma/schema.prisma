@@ -87,6 +87,7 @@ model Product {
   purchaseOrderLines PurchaseOrderLine[]
   damAssets   DAMAsset[]
   forecasts   Forecast[]
+  reviews     Review[]
   
   @@map("products")
 }
@@ -167,6 +168,7 @@ model Customer {
   // Relations
   owner       User?     @relation("CustomerOwner", fields: [ownerId], references: [id])
   orders      Order[]
+  reviews     Review[]
   
   @@map("customers")
 }
@@ -458,4 +460,32 @@ model AuditLog {
   user        User      @relation(fields: [userId], references: [id])
   
   @@map("audit_logs")
+}
+
+// ============================================
+// REVIEWS & RATINGS
+// ============================================
+
+enum ReviewStatus {
+  PENDING
+  RESPONDED
+  RESOLVED
+}
+
+model Review {
+  id          Int       @id @default(autoincrement())
+  customerId  Int
+  productId   Int?
+  rating      Int       // 1-5 stars
+  review      String
+  status      ReviewStatus @default(PENDING)
+  source      String?   // e.g., "Website", "Google", "App Store", etc.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product     Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  
+  @@map("reviews")
 }
