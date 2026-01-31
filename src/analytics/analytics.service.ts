@@ -86,7 +86,7 @@ export class AnalyticsService {
           },
         },
       }),
-      // Orders for last 6 months (for trends)
+      // Orders for last 6 months (for trends) - returns { data, labels }
       this.getOrdersByMonth(6),
       // Customers for last 6 months (for trends)
       this.getCustomersByMonth(6),
@@ -115,7 +115,8 @@ export class AnalyticsService {
       recentOrders,
       // Trend data
       customerTrend: customersLast6Months,
-      orderTrend: ordersLast6Months,
+      orderTrend: Array.isArray(ordersLast6Months) ? ordersLast6Months : ordersLast6Months.data,
+      orderTrendLabels: Array.isArray(ordersLast6Months) ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] : ordersLast6Months.labels,
       // Percentage changes
       orderChangePercent: Number(orderChangePercent.toFixed(2)),
       customerChangePercent: Number(customerChangePercent.toFixed(2)),
@@ -133,6 +134,8 @@ export class AnalyticsService {
   private async getOrdersByMonth(months: number) {
     const now = new Date();
     const data = [];
+    const labels: string[] = [];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
     for (let i = months - 1; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -148,9 +151,10 @@ export class AnalyticsService {
       });
       
       data.push(count);
+      labels.push(monthNames[date.getMonth()]);
     }
     
-    return data;
+    return { data, labels };
   }
 
   private async getCustomersByMonth(months: number) {
