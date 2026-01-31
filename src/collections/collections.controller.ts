@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { CollectionsService } from './collections.service';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
@@ -15,8 +15,13 @@ export class CollectionsController {
   }
 
   @Get()
-  findAll() {
-    return this.collectionsService.findAll();
+  findAll(
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    const skipNum = skip ? parseInt(skip, 10) : undefined;
+    const takeNum = take ? parseInt(take, 10) : undefined;
+    return this.collectionsService.findAll(skipNum, takeNum);
   }
 
   @Get(':id')

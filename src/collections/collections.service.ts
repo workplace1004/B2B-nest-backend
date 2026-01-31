@@ -16,15 +16,44 @@ export class CollectionsService {
     });
   }
 
-  async findAll() {
-    return this.prisma.collection.findMany({
-      include: {
-        _count: {
-          select: { products: true },
+  async findAll(skip?: number, take?: number) {
+    // If pagination params are not provided, return all data (backward compatibility)
+    if (skip === undefined && take === undefined) {
+      const data = await this.prisma.collection.findMany({
+        include: {
+          _count: {
+            select: { products: true },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+      });
+      return data;
+    }
+
+    // Paginated response - ensure take is a valid positive number
+    const skipValue = skip !== undefined && skip >= 0 ? skip : 0;
+    const takeValue = take !== undefined && take > 0 ? take : 10;
+
+    const [data, total] = await Promise.all([
+      this.prisma.collection.findMany({
+        skip: skipValue,
+        take: takeValue,
+        include: {
+          _count: {
+            select: { products: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.collection.count(),
+    ]);
+
+    return {
+      data,
+      total,
+      skip: skipValue,
+      take: takeValue,
+    };
   }
 
   async findOne(id: number) {
