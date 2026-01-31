@@ -18,9 +18,15 @@ export class AnalyticsController {
     @Query('endDate') endDate?: string,
     @Query('timeRange') timeRange?: 'today' | 'week' | 'month',
   ) {
+    // Parse date strings as local dates (YYYY-MM-DD format)
+    const parseLocalDate = (dateStr: string): Date => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    };
+
     return this.analyticsService.getSalesReport(
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
+      startDate ? parseLocalDate(startDate) : undefined,
+      endDate ? parseLocalDate(endDate) : undefined,
       timeRange,
     );
   }

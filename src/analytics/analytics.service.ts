@@ -289,16 +289,7 @@ export class AnalyticsService {
   async getSalesReport(startDate?: Date, endDate?: Date, timeRange?: 'today' | 'week' | 'month') {
     const where: any = {};
     
-    // For 'today', ensure we use the full day range
-    if (timeRange === 'today') {
-      const today = new Date();
-      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
-      const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
-      where.orderDate = {
-        gte: startOfToday,
-        lte: endOfToday,
-      };
-    } else if (startDate || endDate) {
+    if (startDate || endDate) {
       where.orderDate = {};
       if (startDate) {
         // Ensure startDate is at the beginning of the day
@@ -358,9 +349,9 @@ export class AnalyticsService {
 
     // Get previous period for comparison
     let previousPeriodRevenue = 0;
-    if (timeRange === 'today') {
-      // For today, compare with yesterday
-      const yesterday = new Date();
+    if (timeRange === 'today' && startDate) {
+      // For today, compare with yesterday (based on the startDate passed)
+      const yesterday = new Date(startDate);
       yesterday.setDate(yesterday.getDate() - 1);
       const startOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
       const endOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999);
@@ -469,22 +460,27 @@ export class AnalyticsService {
   }
 
   private calculateMonthlyRevenueForPeriod(orders: any[], startDate?: Date, endDate?: Date) {
-    // Always return 12 months of data (last 12 months from current date)
+    // Always return 12 months of data (last 12 months from endDate, or current date if not provided)
     const monthlyData: number[] = Array(12).fill(0);
-    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthLabels: string[] = [];
     
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+    // Use endDate if provided, otherwise use current date
+    const referenceDate = endDate || new Date();
+    const currentYear = referenceDate.getFullYear();
+    const currentMonth = referenceDate.getMonth();
     
-    // Create a map of year-month to array index (last 12 months)
+    // Create a map of year-month to array index (last 12 months ending at referenceDate)
+    // For example, if referenceDate is Jan 2026, we want: Feb 2025, Mar 2025, ..., Dec 2025, Jan 2026
     const monthMap: Record<string, number> = {};
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
     for (let i = 0; i < 12; i++) {
       const monthDate = new Date(currentYear, currentMonth - (11 - i), 1);
       const year = monthDate.getFullYear();
       const month = monthDate.getMonth();
       const key = `${year}-${month}`;
       monthMap[key] = i;
+      monthLabels.push(monthNames[month]);
     }
     
     orders.forEach((order) => {
@@ -498,7 +494,7 @@ export class AnalyticsService {
       }
     });
     
-    return { data: monthlyData, labels };
+    return { data: monthlyData, labels: monthLabels };
   }
 
   private calculateMonthlyRevenue(orders: any[]) {
