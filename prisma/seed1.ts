@@ -504,6 +504,11 @@ async function main() {
     'Very happy with my purchase, will order again.',
   ];
 
+  // Create reviews across the last 6 months for better distribution
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+  const reviewStartDate = sixMonthsAgo;
+  const reviewEndDate = now;
+
   const reviewCount = 2000; // Create 2000 reviews
   let reviewsCreated = 0;
 
@@ -529,8 +534,8 @@ async function main() {
       rating = 1; // 2% chance of 1 star
     }
 
-    // Generate review date (from one month ago to present)
-    const reviewDate = randomDate(startDate, endDate);
+    // Generate review date (from 6 months ago to present for better distribution)
+    const reviewDate = randomDate(reviewStartDate, reviewEndDate);
     
     try {
       await prisma.review.create({
@@ -550,7 +555,7 @@ async function main() {
       console.log(`   ⚠️  Skipped review ${i + 1} due to error`);
     }
   }
-  console.log(`✅ Created ${reviewsCreated} customer reviews/ratings (from one month ago to present)`);
+  console.log(`✅ Created ${reviewsCreated} customer reviews/ratings (from 6 months ago to present)`);
 
   // Summary
   const totalRecords = 

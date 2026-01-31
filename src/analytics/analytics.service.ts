@@ -437,6 +437,9 @@ export class AnalyticsService {
       // Review trends (last 12 months)
       const reviewTrends = await this.getReviewTrends(12);
 
+      // Monthly rating distribution (last 6 months)
+      const monthlyRatingDistribution = await this.getMonthlyRatingDistribution(6);
+
     // Recent reviews (last 50)
     const recentReviews = allReviews.slice(0, 50).map((review) => ({
       id: review.id,
@@ -501,9 +504,49 @@ export class AnalyticsService {
       ratingDistribution,
       sourceBreakdown,
       reviewTrends,
+      monthlyRatingDistribution,
       recentReviews,
       topRatedProducts,
     };
+  }
+
+  private async getMonthlyRatingDistribution(months: number) {
+    const now = new Date();
+    const monthlyData: Array<{ month: string; distribution: Record<number, number> }> = [];
+    
+    for (let i = months - 1; i >= 0; i--) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+      
+      // Get reviews for this month
+      const monthReviews = await this.prisma.review.findMany({
+        where: {
+          createdAt: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        },
+      });
+
+      // Calculate distribution by rating
+      const distribution = {
+        5: monthReviews.filter((r) => r.rating === 5).length,
+        4: monthReviews.filter((r) => r.rating === 4).length,
+        3: monthReviews.filter((r) => r.rating === 3).length,
+        2: monthReviews.filter((r) => r.rating === 2).length,
+        1: monthReviews.filter((r) => r.rating === 1).length,
+      };
+
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      monthlyData.push({
+        month: monthNames[monthStart.getMonth()],
+        distribution,
+      });
+    }
+    
+    // Always return 6 months of data (even if some have zero reviews)
+    // This ensures the frontend gets consistent data structure
+    return monthlyData;
   }
 
   private async getReviewTrends(months: number): Promise<number[]> {
