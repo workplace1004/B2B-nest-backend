@@ -286,7 +286,7 @@ export class AnalyticsService {
     return retentionData;
   }
 
-  async getSalesReport(startDate?: Date, endDate?: Date) {
+  async getSalesReport(startDate?: Date, endDate?: Date, timeRange?: 'today' | 'week' | 'month') {
     const where: any = {};
     if (startDate || endDate) {
       where.orderDate = {};
@@ -314,7 +314,26 @@ export class AnalyticsService {
       0,
     );
 
-    // Calculate monthly revenue breakdown
+    // Calculate revenue breakdown based on time range
+    let revenueData: number[] = [];
+    let labels: string[] = [];
+    
+    if (timeRange === 'today') {
+      const hourlyData = this.calculateHourlyRevenue(orders);
+      revenueData = hourlyData.data;
+      labels = hourlyData.labels;
+    } else if (timeRange === 'week') {
+      const dailyData = this.calculateDailyRevenue(orders);
+      revenueData = dailyData.data;
+      labels = dailyData.labels;
+    } else {
+      // Default to monthly - return last 12 months
+      const monthlyData = this.calculateMonthlyRevenueForPeriod(orders, startDate, endDate);
+      revenueData = monthlyData.data;
+      labels = monthlyData.labels;
+    }
+    
+    // Keep monthlyRevenue for backward compatibility
     const monthlyRevenue = this.calculateMonthlyRevenue(orders);
 
     // Get previous period for comparison
@@ -349,9 +368,97 @@ export class AnalyticsService {
       totalRevenue,
       orderCount: orders.length,
       monthlyRevenue,
+      revenueData, // New: data array based on time range
+      labels, // New: labels array based on time range
       previousPeriodRevenue,
       revenueChangePercent: Number(revenueChangePercent.toFixed(2)),
     };
+  }
+
+  private calculateHourlyRevenue(orders: any[]) {
+    // 12 intervals: 2 AM, 4 AM, 6 AM, 8 AM, 10 AM, 12 PM, 2 PM, 4 PM, 6 PM, 8 PM, 10 PM, 12 AM
+    const hourlyData: number[] = Array(12).fill(0);
+    const labels = ['2 AM', '4 AM', '6 AM', '8 AM', '10 AM', '12 PM', '2 PM', '4 PM', '6 PM', '8 PM', '10 PM', '12 AM'];
+    
+    orders.forEach((order) => {
+      const orderDate = new Date(order.orderDate);
+      const hour = orderDate.getHours();
+      
+      // Map hours to 2-hour intervals
+      // 12 AM: hours 0-1 (index 11)
+      // 2 AM: hours 2-3 (index 0)
+      // 4 AM: hours 4-5 (index 1)
+      // 6 AM: hours 6-7 (index 2)
+      // 8 AM: hours 8-9 (index 3)
+      // 10 AM: hours 10-11 (index 4)
+      // 12 PM: hours 12-13 (index 5)
+      // 2 PM: hours 14-15 (index 6)
+      // 4 PM: hours 16-17 (index 7)
+      // 6 PM: hours 18-19 (index 8)
+      // 8 PM: hours 20-21 (index 9)
+      // 10 PM: hours 22-23 (index 10)
+      let intervalIndex: number;
+      if (hour >= 0 && hour < 2) {
+        intervalIndex = 11; // 12 AM
+      } else {
+        intervalIndex = Math.floor((hour - 2) / 2);
+      }
+      
+      hourlyData[intervalIndex] += Number(order.totalAmount || 0);
+    });
+    
+    return { data: hourlyData, labels };
+  }
+
+  private calculateDailyRevenue(orders: any[]) {
+    // 7 days: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+    const dailyData: number[] = Array(7).fill(0);
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    orders.forEach((order) => {
+      const orderDate = new Date(order.orderDate);
+      const dayOfWeek = orderDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      
+      // Convert to Monday = 0, Tuesday = 1, ..., Sunday = 6
+      const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      
+      dailyData[dayIndex] += Number(order.totalAmount || 0);
+    });
+    
+    return { data: dailyData, labels };
+  }
+
+  private calculateMonthlyRevenueForPeriod(orders: any[], startDate?: Date, endDate?: Date) {
+    // Always return 12 months of data (last 12 months from current date)
+    const monthlyData: number[] = Array(12).fill(0);
+    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    
+    // Create a map of year-month to array index (last 12 months)
+    const monthMap: Record<string, number> = {};
+    for (let i = 0; i < 12; i++) {
+      const monthDate = new Date(currentYear, currentMonth - (11 - i), 1);
+      const year = monthDate.getFullYear();
+      const month = monthDate.getMonth();
+      const key = `${year}-${month}`;
+      monthMap[key] = i;
+    }
+    
+    orders.forEach((order) => {
+      const orderDate = new Date(order.orderDate);
+      const year = orderDate.getFullYear();
+      const month = orderDate.getMonth();
+      const key = `${year}-${month}`;
+      
+      if (monthMap[key] !== undefined) {
+        monthlyData[monthMap[key]] += Number(order.totalAmount || 0);
+      }
+    });
+    
+    return { data: monthlyData, labels };
   }
 
   private calculateMonthlyRevenue(orders: any[]) {

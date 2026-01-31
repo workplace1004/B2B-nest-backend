@@ -16,10 +16,12 @@ export class AnalyticsController {
   getSalesReport(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('timeRange') timeRange?: 'today' | 'week' | 'month',
   ) {
     return this.analyticsService.getSalesReport(
       startDate ? new Date(startDate) : undefined,
       endDate ? new Date(endDate) : undefined,
+      timeRange,
     );
   }
 
