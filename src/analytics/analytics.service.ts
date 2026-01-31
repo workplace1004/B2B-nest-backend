@@ -440,8 +440,8 @@ export class AnalyticsService {
       // Monthly rating distribution (last 6 months)
       const monthlyRatingDistribution = await this.getMonthlyRatingDistribution(6);
 
-    // Recent reviews (last 50)
-    const recentReviews = allReviews.slice(0, 50).map((review) => ({
+    // Recent reviews (last 10)
+    const recentReviews = allReviews.slice(0, 10).map((review) => ({
       id: review.id,
       customer: review.customer.name,
       rating: review.rating,
