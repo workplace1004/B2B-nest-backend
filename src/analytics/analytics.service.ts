@@ -372,5 +372,161 @@ export class AnalyticsService {
     const sortedKeys = Object.keys(monthlyData).sort();
     return sortedKeys.map((key) => monthlyData[key]);
   }
+
+  async getReviewsStats() {
+    const now = new Date();
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Get all reviews
+    const allReviews = await this.prisma.review.findMany({
+      include: {
+        customer: true,
+        product: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Get reviews for this month
+    const thisMonthReviews = allReviews.filter((review) => {
+      const reviewDate = new Date(review.createdAt);
+      return reviewDate >= thisMonthStart;
+    });
+
+    // Get reviews for last month
+    const lastMonthReviews = allReviews.filter((review) => {
+      const reviewDate = new Date(review.createdAt);
+      return reviewDate >= lastMonthStart && reviewDate <= lastMonthEnd;
+    });
+
+    // Calculate statistics
+    const totalReviews = allReviews.length;
+    const newReviewsThisMonth = thisMonthReviews.length;
+    const newReviewsLastMonth = lastMonthReviews.length;
+    
+    // Calculate average rating
+    const avgRating = totalReviews > 0
+      ? allReviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+      : 0;
+
+    // Calculate positive review ratio (4-5 stars)
+    const positiveReviews = allReviews.filter((r) => r.rating >= 4).length;
+    const positiveRatio = totalReviews > 0 ? (positiveReviews / totalReviews) * 100 : 0;
+
+    // Calculate response rate
+    const respondedReviews = allReviews.filter((r) => r.status === 'RESPONDED' || r.status === 'RESOLVED').length;
+    const responseRate = totalReviews > 0 ? (respondedReviews / totalReviews) * 100 : 0;
+
+    // Rating distribution
+    const ratingDistribution = {
+      5: allReviews.filter((r) => r.rating === 5).length,
+      4: allReviews.filter((r) => r.rating === 4).length,
+      3: allReviews.filter((r) => r.rating === 3).length,
+      2: allReviews.filter((r) => r.rating === 2).length,
+      1: allReviews.filter((r) => r.rating === 1).length,
+    };
+
+    // Review sources breakdown
+    const sourceBreakdown = allReviews.reduce((acc, review) => {
+      const source = review.source || 'Unknown';
+      acc[source] = (acc[source] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+      // Review trends (last 12 months)
+      const reviewTrends = await this.getReviewTrends(12);
+
+    // Recent reviews (last 50)
+    const recentReviews = allReviews.slice(0, 50).map((review) => ({
+      id: review.id,
+      customer: review.customer.name,
+      rating: review.rating,
+      review: review.review,
+      date: new Date(review.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+      status: review.status === 'RESPONDED' ? 'Responded' : review.status === 'RESOLVED' ? 'Resolved' : 'Pending',
+    }));
+
+    // Top rated products
+    const productRatings = allReviews
+      .filter((r) => r.productId !== null)
+      .reduce((acc, review) => {
+        if (!review.productId) return acc;
+        const productId = review.productId;
+        if (!acc[productId]) {
+          acc[productId] = {
+            productId,
+            productName: review.product?.name || 'Unknown Product',
+            totalRating: 0,
+            count: 0,
+          };
+        }
+        acc[productId].totalRating += review.rating;
+        acc[productId].count += 1;
+        return acc;
+      }, {} as Record<number, { productId: number; productName: string; totalRating: number; count: number }>);
+
+    const topRatedProducts = Object.values(productRatings)
+      .map((p) => ({
+        product: p.productName,
+        rating: p.totalRating / p.count,
+        totalReviews: p.count,
+      }))
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 10);
+
+    // Calculate percentage changes
+    const totalReviewsChange = lastMonthReviews.length > 0
+      ? ((newReviewsThisMonth - newReviewsLastMonth) / newReviewsLastMonth) * 100
+      : 0;
+    const avgRatingChange = 0; // Can be calculated if we track historical averages
+    const positiveRatioChange = 0; // Can be calculated if we track historical ratios
+    const responseRateChange = 0; // Can be calculated if we track historical rates
+
+    return {
+      totalReviews,
+      newReviewsThisMonth,
+      newReviewsLastMonth,
+      totalReviewsChange: Number(totalReviewsChange.toFixed(1)),
+      avgRating: Number(avgRating.toFixed(1)),
+      avgRatingChange: Number(avgRatingChange.toFixed(1)),
+      positiveRatio: Number(positiveRatio.toFixed(0)),
+      positiveRatioChange: Number(positiveRatioChange.toFixed(1)),
+      responseRate: Number(responseRate.toFixed(0)),
+      responseRateChange: Number(responseRateChange.toFixed(1)),
+      ratingDistribution,
+      sourceBreakdown,
+      reviewTrends,
+      recentReviews,
+      topRatedProducts,
+    };
+  }
+
+  private async getReviewTrends(months: number): Promise<number[]> {
+    const now = new Date();
+    const trends: number[] = [];
+    
+    for (let i = months - 1; i >= 0; i--) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+      
+      const count = await this.prisma.review.count({
+        where: {
+          createdAt: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        },
+      });
+      
+      trends.push(count);
+    }
+    
+    return trends;
+  }
 }
 

@@ -22,5 +22,10 @@ export class AnalyticsController {
       endDate ? new Date(endDate) : undefined,
     );
   }
+
+  @Get('reviews')
+  getReviewsStats() {
+    return this.analyticsService.getReviewsStats();
+  }
 }
 
