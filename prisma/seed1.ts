@@ -99,7 +99,16 @@ async function main() {
   try {
     await prisma.$queryRaw`SELECT 1 FROM users LIMIT 1`;
   } catch (error: any) {
-    if (error?.code === 'P2021') {
+    // Handle Prisma error codes: P2021 (table doesn't exist), P2010 (raw query error)
+    // Handle PostgreSQL error code: 42P01 (relation does not exist)
+    const isTableMissing = 
+      error?.code === 'P2021' || 
+      error?.code === 'P2010' ||
+      error?.meta?.code === '42P01' || 
+      error?.message?.includes('does not exist') ||
+      error?.message?.includes('relation') && error?.message?.includes('does not exist');
+    
+    if (isTableMissing) {
       console.log('⚠️  Users table does not exist yet - migrations need to run first');
       console.log('💡 Skipping seed - run migrations first, then seed');
       return;
