@@ -7,7 +7,7 @@
   "license": "ISC",
   "main": "dist/main.js",
   "scripts": {
-    "build": "nest build --verbose",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "nest start",
     "prestart": "npm run build && test -f dist/main.js || (echo 'Build failed - dist/main.js not found' && exit 1)",
