@@ -7,7 +7,10 @@ npm run generate
 echo "📦 Running database migrations..."
 npm run migrate:deploy || npm run migrate
 
-echo "🌱 Running seed script..."
+echo "🏗️  Building NestJS application..."
+npm run build
+
+echo "🌱 Running seed script (optional)..."
 npm run seed1 || echo "⚠️  Seed script failed, but continuing..."
 
 echo "✅ Build completed!"

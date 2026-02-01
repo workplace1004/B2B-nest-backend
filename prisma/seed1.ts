@@ -95,6 +95,18 @@ async function main() {
 
   console.log('✅ Data cleared');
 
+  // Check if users table exists before proceeding
+  try {
+    await prisma.$queryRaw`SELECT 1 FROM users LIMIT 1`;
+  } catch (error: any) {
+    if (error?.code === 'P2021') {
+      console.log('⚠️  Users table does not exist yet - migrations need to run first');
+      console.log('💡 Skipping seed - run migrations first, then seed');
+      return;
+    }
+    throw error;
+  }
+
   // Create admin user if not exists
   const adminEmail = 'admin@gmail.com';
   const adminPassword = '123123';
@@ -616,6 +628,8 @@ main()
     if (e?.code === 'P2021') {
       console.log('⚠️  Tables not found - this is normal if migrations haven\'t run yet');
       console.log('💡 Run migrations first, then seed');
+      // Exit gracefully without error code
+      process.exit(0);
     } else {
       process.exit(1);
     }
