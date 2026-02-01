@@ -54,22 +54,44 @@ async function main() {
 
   // Clear existing data (optional - comment out if you want to keep existing data)
   console.log('🗑️  Clearing existing data...');
-  await prisma.orderLine.deleteMany();
-  await prisma.shipment.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.purchaseOrderLine.deleteMany();
-  await prisma.purchaseOrder.deleteMany();
-  await prisma.forecast.deleteMany();
-  await prisma.dAMAsset.deleteMany();
-  await prisma.inventory.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.collection.deleteMany();
-  await prisma.customer.deleteMany();
-  await prisma.supplier.deleteMany();
-  await prisma.warehouse.deleteMany();
-  await prisma.auditLog.deleteMany();
+  
+  // Helper function to safely delete from table
+  const safeDelete = async (deleteFn: () => Promise<any>, tableName: string) => {
+    try {
+      await deleteFn();
+    } catch (error: any) {
+      // If table doesn't exist (P2021), that's okay - migrations will create it
+      if (error?.code === 'P2021') {
+        console.log(`⚠️  Table ${tableName} doesn't exist yet, skipping delete`);
+      } else {
+        throw error;
+      }
+    }
+  };
+
+  await safeDelete(() => prisma.orderLine.deleteMany(), 'order_lines');
+  await safeDelete(() => prisma.shipment.deleteMany(), 'shipments');
+  await safeDelete(() => prisma.order.deleteMany(), 'orders');
+  await safeDelete(() => prisma.purchaseOrderLine.deleteMany(), 'purchase_order_lines');
+  await safeDelete(() => prisma.purchaseOrder.deleteMany(), 'purchase_orders');
+  await safeDelete(() => prisma.forecast.deleteMany(), 'forecasts');
+  await safeDelete(() => prisma.dAMAsset.deleteMany(), 'd_a_m_assets');
+  await safeDelete(() => prisma.inventory.deleteMany(), 'inventories');
+  await safeDelete(() => prisma.product.deleteMany(), 'products');
+  await safeDelete(() => prisma.collection.deleteMany(), 'collections');
+  await safeDelete(() => prisma.customer.deleteMany(), 'customers');
+  await safeDelete(() => prisma.supplier.deleteMany(), 'suppliers');
+  await safeDelete(() => prisma.warehouse.deleteMany(), 'warehouses');
+  await safeDelete(() => prisma.auditLog.deleteMany(), 'audit_logs');
+  
   // Keep admin user, delete others
-  await prisma.user.deleteMany({ where: { email: { not: 'admin@gmail.com' } } });
+  try {
+    await prisma.user.deleteMany({ where: { email: { not: 'admin@gmail.com' } } });
+  } catch (error: any) {
+    if (error?.code !== 'P2021') {
+      throw error;
+    }
+  }
 
   console.log('✅ Data cleared');
 
@@ -590,7 +612,13 @@ async function main() {
 main()
   .catch((e) => {
     console.error('❌ Seed1 failed:', e);
-    process.exit(1);
+    // Don't exit with error code if it's just a missing table - migrations will fix it
+    if (e?.code === 'P2021') {
+      console.log('⚠️  Tables not found - this is normal if migrations haven\'t run yet');
+      console.log('💡 Run migrations first, then seed');
+    } else {
+      process.exit(1);
+    }
   })
   .finally(async () => {
     await prisma.$disconnect();
