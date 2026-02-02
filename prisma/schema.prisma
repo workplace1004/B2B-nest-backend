@@ -798,3 +798,20 @@ model Task {
 
   @@map("tasks")
 }
+
+// ============================================
+// SIZE & FIT
+// ============================================
+
+model SizeChart {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String? // e.g., "Tops", "Bottoms", "Shoes", "Accessories"
+  description String?
+  measurements Json   // Store size measurements as JSON: { "XS": { "Chest": "34", "Waist": "28", ... }, "S": {...}, ... }
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("size_charts")
+}
