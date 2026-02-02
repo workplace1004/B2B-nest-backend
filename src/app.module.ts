@@ -13,6 +13,15 @@ import { WarehousesModule } from './warehouses/warehouses.module';
 import { ForecastModule } from './forecast/forecast.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { DamModule } from './dam/dam.module';
+import { BOMModule } from './bom/bom.module';
+import { ReturnsModule } from './returns/returns.module';
+import { PricingModule } from './pricing/pricing.module';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { RulesModule } from './rules/rules.module';
+import { AlertsModule } from './alerts/alerts.module';
+import { ExceptionsModule } from './exceptions/exceptions.module';
+import { ReplenishmentModule } from './replenishment/replenishment.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -32,6 +41,15 @@ import { DamModule } from './dam/dam.module';
     ForecastModule,
     AnalyticsModule,
     DamModule,
+    BOMModule,
+    ReturnsModule,
+    PricingModule,
+    IntegrationsModule,
+    RulesModule,
+    AlertsModule,
+    ExceptionsModule,
+    ReplenishmentModule,
+    TasksModule,
   ],
 })
 export class AppModule {}

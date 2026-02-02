@@ -13,6 +13,10 @@ export class CreateCustomerDto {
   @IsOptional()
   phone?: string;
 
+  @IsString()
+  @IsOptional()
+  contactPerson?: string;
+
   @IsEnum(CustomerType)
   @IsOptional()
   type?: CustomerType;

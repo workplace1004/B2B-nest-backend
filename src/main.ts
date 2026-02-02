@@ -3,7 +3,17 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: true,
+    rawBody: false,
+  });
+  
+  // Increase body size limit to handle large image uploads (50MB)
+  // Access the underlying Express instance and configure body parser
+  const expressApp = app.getHttpAdapter().getInstance();
+  const express = require('express');
+  expressApp.use(express.json({ limit: '50mb' }));
+  expressApp.use(express.urlencoded({ limit: '50mb', extended: true }));
   
   // Enable CORS
   const defaultOrigins = [

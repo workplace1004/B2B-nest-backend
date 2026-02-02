@@ -36,6 +36,15 @@ export class CreateProductDto {
   basePrice?: number;
 
   @IsNumber()
+  @IsOptional()
+  price?: number;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
+
+  @IsNumber()
   collectionId: number;
 }
 

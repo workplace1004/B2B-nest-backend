@@ -20,21 +20,21 @@ enum UserRole {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  email         String    @unique
-  password      String
-  firstName     String
-  lastName      String
-  role          UserRole  @default(B2B)
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole @default(B2B)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  orders        Order[]
-  customers     Customer[] @relation("CustomerOwner")
-  auditLogs     AuditLog[]
-  
+  orders    Order[]
+  customers Customer[] @relation("CustomerOwner")
+  auditLogs AuditLog[]
+
   @@map("users")
 }
 
@@ -50,45 +50,52 @@ enum CollectionLifecycle {
 }
 
 model Collection {
-  id          Int       @id @default(autoincrement())
+  id          Int                 @id @default(autoincrement())
   name        String
-  season      String?   // e.g., "Spring 2024"
-  drop        String?   // e.g., "Drop 1"
+  season      String? // e.g., "Spring 2024"
+  drop        String? // e.g., "Drop 1"
   lifecycle   CollectionLifecycle @default(PLANNING)
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
   // Relations
-  products    Product[]
-  
+  products Product[]
+
   @@map("collections")
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
-  name        String
-  sku         String    @unique
-  style       String?
-  sizes       String[]  // Array of sizes
-  colors      String[]  // Array of colors
-  materials   String[]  // Array of materials
-  ean         String?   @unique
-  description String?
-  basePrice   Decimal   @default(0)
+  id           Int      @id @default(autoincrement())
+  name         String
+  sku          String   @unique
+  style        String?
+  sizes        String[] // Array of sizes
+  colors       String[] // Array of colors
+  materials    String[] // Array of materials
+  ean          String?  @unique
+  description  String?
+  basePrice    Decimal  @default(0)
+  price        Decimal? @default(0) // Current selling price
+  images       String[] // Array of image URLs (base64 or URLs)
   collectionId Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   // Relations
-  collection  Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  inventory   Inventory[]
-  orderLines  OrderLine[]
+  collection         Collection          @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  inventory          Inventory[]
+  orderLines         OrderLine[]
   purchaseOrderLines PurchaseOrderLine[]
-  damAssets   DAMAsset[]
-  forecasts   Forecast[]
-  reviews     Review[]
-  
+  damAssets          DAMAsset[]
+  forecasts          Forecast[]
+  reviews            Review[]
+  bom                BOM?
+  bomComponents      BOMComponent[]
+  pricing            ProductPricing[]
+  returns            Return[]
+  Replenishment      Replenishment[]
+
   @@map("products")
 }
 
@@ -97,42 +104,43 @@ model Product {
 // ============================================
 
 model Warehouse {
-  id          Int       @id @default(autoincrement())
-  name        String
-  location    String?
-  address     String?
-  city        String?
-  country     String?
-  postalCode  String?
-  tplReference String?  // 3PL reference
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id           Int      @id @default(autoincrement())
+  name         String
+  location     String?
+  address      String?
+  city         String?
+  country      String?
+  postalCode   String?
+  tplReference String? // 3PL reference
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   // Relations
-  inventory   Inventory[]
-  shipments   Shipment[]
-  
+  inventory      Inventory[]
+  shipments      Shipment[]
+  replenishments Replenishment[]
+
   @@map("warehouses")
 }
 
 model Inventory {
-  id          Int       @id @default(autoincrement())
-  productId   Int
-  warehouseId Int
-  quantity    Int       @default(0)
-  reservedQty Int       @default(0) // Reserved for orders
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  warehouseId  Int
+  quantity     Int      @default(0)
+  reservedQty  Int      @default(0) // Reserved for orders
   availableQty Int      @default(0) // quantity - reservedQty
   reorderPoint Int      @default(0)
-  safetyStock Int       @default(0)
-  lastUpdated DateTime  @default(now())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  safetyStock  Int      @default(0)
+  lastUpdated  DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   // Relations
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-  
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
   @@unique([productId, warehouseId])
   @@map("inventory")
 }
@@ -148,28 +156,29 @@ enum CustomerType {
 }
 
 model Customer {
-  id          Int       @id @default(autoincrement())
-  name        String
-  email       String?   @unique
-  phone       String?
-  type        CustomerType @default(B2B)
-  companyName String?
-  taxId       String?
-  address     String?
-  city        String?
-  country     String?
-  postalCode  String?
-  creditLimit Decimal?  @default(0)
-  isActive    Boolean   @default(true)
-  ownerId     Int?      // Sales rep assigned
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id            Int          @id @default(autoincrement())
+  name          String
+  email         String?      @unique
+  phone         String?
+  contactPerson String? // Contact person name
+  type          CustomerType @default(B2B)
+  companyName   String?
+  taxId         String?
+  address       String?
+  city          String?
+  country       String?
+  postalCode    String?
+  creditLimit   Decimal?     @default(0)
+  isActive      Boolean      @default(true)
+  ownerId       Int? // Sales rep assigned
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
   // Relations
-  owner       User?     @relation("CustomerOwner", fields: [ownerId], references: [id])
-  orders      Order[]
-  reviews     Review[]
-  
+  owner   User?    @relation("CustomerOwner", fields: [ownerId], references: [id])
+  orders  Order[]
+  reviews Review[]
+
   @@map("customers")
 }
 
@@ -193,50 +202,51 @@ enum OrderType {
 }
 
 model Order {
-  id          Int       @id @default(autoincrement())
-  orderNumber String    @unique
-  customerId  Int
-  userId      Int?      // Sales rep who created
-  type        OrderType @default(B2B)
-  status      OrderStatus @default(DRAFT)
-  totalAmount Decimal   @default(0)
-  currency    String    @default("USD")
-  notes       String?
+  id              Int         @id @default(autoincrement())
+  orderNumber     String      @unique
+  customerId      Int
+  userId          Int? // Sales rep who created
+  type            OrderType   @default(B2B)
+  status          OrderStatus @default(DRAFT)
+  totalAmount     Decimal     @default(0)
+  currency        String      @default("USD")
+  notes           String?
   shippingAddress String?
   billingAddress  String?
-  orderDate    DateTime  @default(now())
-  requiredDate DateTime?
-  shippedDate  DateTime?
-  deliveredDate DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  orderDate       DateTime    @default(now())
+  requiredDate    DateTime?
+  shippedDate     DateTime?
+  deliveredDate   DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
   // Relations
-  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  user        User?     @relation(fields: [userId], references: [id])
-  orderLines  OrderLine[]
-  shipments   Shipment[]
-  
+  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  user       User?       @relation(fields: [userId], references: [id])
+  orderLines OrderLine[]
+  shipments  Shipment[]
+  returns    Return[]
+
   @@map("orders")
 }
 
 model OrderLine {
-  id          Int       @id @default(autoincrement())
-  orderId     Int
-  productId   Int
-  quantity    Int
-  unitPrice   Decimal
-  totalPrice  Decimal
-  size        String?
-  color       String?
-  fulfilledQty Int     @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id           Int      @id @default(autoincrement())
+  orderId      Int
+  productId    Int
+  quantity     Int
+  unitPrice    Decimal
+  totalPrice   Decimal
+  size         String?
+  color        String?
+  fulfilledQty Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   // Relations
-  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
-  
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
   @@map("order_lines")
 }
 
@@ -245,23 +255,23 @@ model OrderLine {
 // ============================================
 
 model Supplier {
-  id          Int       @id @default(autoincrement())
-  name        String
-  email       String?
-  phone       String?
-  contactName String?
-  address     String?
-  city        String?
-  country     String?
-  postalCode  String?
-  leadTimeDays Int?    @default(30) // Average lead time in days
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String?
+  phone        String?
+  contactName  String?
+  address      String?
+  city         String?
+  country      String?
+  postalCode   String?
+  leadTimeDays Int?     @default(30) // Average lead time in days
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   // Relations
   purchaseOrders PurchaseOrder[]
-  
+
   @@map("suppliers")
 }
 
@@ -275,41 +285,41 @@ enum PurchaseOrderStatus {
 }
 
 model PurchaseOrder {
-  id          Int       @id @default(autoincrement())
-  poNumber    String    @unique
-  supplierId  Int
-  status      PurchaseOrderStatus @default(DRAFT)
-  totalAmount Decimal   @default(0)
-  currency    String    @default("USD")
-  orderDate   DateTime  @default(now())
+  id           Int                 @id @default(autoincrement())
+  poNumber     String              @unique
+  supplierId   Int
+  status       PurchaseOrderStatus @default(DRAFT)
+  totalAmount  Decimal             @default(0)
+  currency     String              @default("USD")
+  orderDate    DateTime            @default(now())
   expectedDate DateTime?
   receivedDate DateTime?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  notes        String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
   // Relations
-  supplier    Supplier  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  lines       PurchaseOrderLine[]
-  
+  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  lines    PurchaseOrderLine[]
+
   @@map("purchase_orders")
 }
 
 model PurchaseOrderLine {
-  id          Int       @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   purchaseOrderId Int
-  productId   Int
-  quantity    Int
-  unitCost    Decimal
-  totalCost   Decimal
-  receivedQty Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  productId       Int
+  quantity        Int
+  unitCost        Decimal
+  totalCost       Decimal
+  receivedQty     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   // Relations
   purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
   product       Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
-  
+
   @@map("purchase_order_lines")
 }
 
@@ -328,23 +338,23 @@ enum ShipmentStatus {
 }
 
 model Shipment {
-  id          Int       @id @default(autoincrement())
-  shipmentNumber String  @unique
-  orderId     Int
-  warehouseId Int
-  status      ShipmentStatus @default(PENDING)
-  carrier     String?
+  id             Int            @id @default(autoincrement())
+  shipmentNumber String         @unique
+  orderId        Int
+  warehouseId    Int
+  status         ShipmentStatus @default(PENDING)
+  carrier        String?
   trackingNumber String?
-  shippingCost Decimal?  @default(0)
-  shippedDate DateTime?
-  deliveredDate DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  shippingCost   Decimal?       @default(0)
+  shippedDate    DateTime?
+  deliveredDate  DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
   // Relations
-  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-  
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+
   @@map("shipments")
 }
 
@@ -360,22 +370,22 @@ enum AssetType {
 }
 
 model DAMAsset {
-  id          Int       @id @default(autoincrement())
-  productId   Int?
-  name        String
-  type        AssetType @default(IMAGE)
-  url         String
+  id           Int       @id @default(autoincrement())
+  productId    Int?
+  name         String
+  type         AssetType @default(IMAGE)
+  url          String
   thumbnailUrl String?
-  description String?
-  tags        String[]
-  fileSize    Int?      // in bytes
-  mimeType    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  description  String?
+  tags         String[]
+  fileSize     Int? // in bytes
+  mimeType     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
   // Relations
-  product     Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
-  
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
   @@map("dam_assets")
 }
 
@@ -384,53 +394,320 @@ model DAMAsset {
 // ============================================
 
 model Forecast {
-  id          Int       @id @default(autoincrement())
-  productId   Int
-  size        String?
-  period      String    // e.g., "2024-Q1" or "2024-01"
-  predictedDemand Int   @default(0)
-  confidence  Decimal?  // 0-1 confidence score
-  method      String?   // e.g., "AI", "Manual", "Historical"
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id              Int      @id @default(autoincrement())
+  productId       Int
+  size            String?
+  period          String // e.g., "2024-Q1" or "2024-01"
+  predictedDemand Int      @default(0)
+  confidence      Decimal? // 0-1 confidence score
+  method          String? // e.g., "AI", "Manual", "Historical"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   // Relations
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@unique([productId, size, period])
   @@map("forecasts")
 }
 
-model ScenarioSimulation {
+// ============================================
+// BILL OF MATERIALS (BOM)
+// ============================================
+
+enum BOMStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model BOM {
   id          Int       @id @default(autoincrement())
+  productId   Int       @unique
   name        String
+  status      BOMStatus @default(ACTIVE)
   description String?
-  scenarioData Json     // Store scenario parameters as JSON
-  results     Json?     // Store simulation results as JSON
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  
-  @@map("scenario_simulations")
+
+  // Relations
+  product    Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  components BOMComponent[]
+
+  @@map("boms")
+}
+
+model BOMComponent {
+  id        Int      @id @default(autoincrement())
+  bomId     Int
+  productId Int? // Component product (if exists)
+  name      String
+  quantity  Decimal  @default(1)
+  unit      String?  @default("pcs")
+  cost      Decimal? @default(0)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  bom     BOM      @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("bom_components")
 }
 
 // ============================================
-// FINANCIAL DATA
+// RETURNS & RMA
 // ============================================
 
-model FinancialData {
-  id          Int       @id @default(autoincrement())
-  productId   Int?
-  period      String    // e.g., "2024-Q1"
-  cogs        Decimal?  // Cost of Goods Sold
-  revenue     Decimal?
-  margin      Decimal?
-  marginPercent Decimal?
-  inventoryValue Decimal?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  @@unique([productId, period])
-  @@map("financial_data")
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum ReturnReason {
+  DEFECTIVE
+  WRONG_SIZE
+  NOT_AS_DESCRIBED
+  DAMAGED
+  CUSTOMER_REQUEST
+  OTHER
+}
+
+model Return {
+  id            Int          @id @default(autoincrement())
+  rmaNumber     String       @unique
+  orderId       Int
+  productId     Int
+  orderLineId   Int?
+  quantity      Int
+  reason        ReturnReason
+  reasonDetails String?
+  status        ReturnStatus @default(PENDING)
+  refundAmount  Decimal?     @default(0)
+  notes         String?
+  requestedDate DateTime     @default(now())
+  approvedDate  DateTime?
+  processedDate DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("returns")
+}
+
+// ============================================
+// PRICING
+// ============================================
+
+model ProductPricing {
+  id              Int       @id @default(autoincrement())
+  productId       Int
+  basePrice       Decimal   @default(0)
+  discountPercent Decimal?  @default(0)
+  finalPrice      Decimal   @default(0)
+  validFrom       DateTime  @default(now())
+  validUntil      DateTime?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_pricing")
+}
+
+// ============================================
+// INTEGRATIONS
+// ============================================
+
+enum IntegrationType {
+  E_COMMERCE
+  ACCOUNTING
+  SHIPPING
+  MARKETING
+  ANALYTICS
+  OTHER
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  PENDING
+  ERROR
+}
+
+model Integration {
+  id        Int               @id @default(autoincrement())
+  name      String
+  type      IntegrationType
+  status    IntegrationStatus @default(DISCONNECTED)
+  apiKey    String? // Encrypted
+  apiSecret String? // Encrypted
+  config    Json? // Additional configuration
+  lastSync  DateTime?
+  notes     String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@map("integrations")
+}
+
+// ============================================
+// BUSINESS RULES
+// ============================================
+
+enum RuleType {
+  INVENTORY
+  PRICING
+  ORDER
+  ALERT
+  AUTOMATION
+  OTHER
+}
+
+enum RuleStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+model Rule {
+  id          Int        @id @default(autoincrement())
+  name        String
+  type        RuleType
+  status      RuleStatus @default(ACTIVE)
+  description String?
+  conditions  Json // Rule conditions as JSON
+  actions     Json // Rule actions as JSON
+  priority    Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("rules")
+}
+
+// ============================================
+// ALERTS
+// ============================================
+
+enum AlertType {
+  LOW_STOCK
+  HIGH_STOCK
+  ORDER_DELAY
+  PAYMENT_ISSUE
+  SYSTEM_ERROR
+  CUSTOM
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  NEW
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+model Alert {
+  id             Int           @id @default(autoincrement())
+  type           AlertType
+  severity       AlertSeverity @default(MEDIUM)
+  status         AlertStatus   @default(NEW)
+  title          String
+  message        String
+  entityType     String? // e.g., "Product", "Order", "Inventory"
+  entityId       Int?
+  metadata       Json? // Additional alert data
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("alerts")
+}
+
+// ============================================
+// EXCEPTIONS
+// ============================================
+
+enum ExceptionType {
+  INVENTORY_MISMATCH
+  ORDER_PROCESSING_DELAY
+  SHIPMENT_DELAY
+  PAYMENT_FAILURE
+  DATA_INCONSISTENCY
+  SYSTEM_ERROR
+  CUSTOM
+}
+
+enum ExceptionStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Exception {
+  id         Int             @id @default(autoincrement())
+  type       ExceptionType
+  status     ExceptionStatus @default(OPEN)
+  title      String
+  message    String
+  location   String? // e.g., "Warehouse 1", "Order #123"
+  entityType String? // e.g., "Product", "Order", "Inventory"
+  entityId   Int?
+  metadata   Json? // Additional exception data
+  resolvedAt DateTime?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@map("exceptions")
+}
+
+// ============================================
+// REPLENISHMENT
+// ============================================
+
+enum ReplenishmentStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Replenishment {
+  id            Int                 @id @default(autoincrement())
+  productId     Int
+  warehouseId   Int
+  quantity      Int
+  status        ReplenishmentStatus @default(PENDING)
+  reorderPoint  Int
+  safetyStock   Int
+  requestedDate DateTime            @default(now())
+  completedDate DateTime?
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  // Relations
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@map("replenishments")
 }
 
 // ============================================
@@ -446,19 +723,19 @@ enum AuditAction {
 }
 
 model AuditLog {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  action      AuditAction
-  entityType  String    // e.g., "Product", "Order", "Inventory"
-  entityId    Int?
-  changes     Json?     // Store before/after changes
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime  @default(now())
-  
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  action     AuditAction
+  entityType String // e.g., "Product", "Order", "Inventory"
+  entityId   Int?
+  changes    Json? // Store before/after changes
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime    @default(now())
+
   // Relations
-  user        User      @relation(fields: [userId], references: [id])
-  
+  user User @relation(fields: [userId], references: [id])
+
   @@map("audit_logs")
 }
 
@@ -473,19 +750,51 @@ enum ReviewStatus {
 }
 
 model Review {
-  id          Int       @id @default(autoincrement())
-  customerId  Int
-  productId   Int?
-  rating      Int       // 1-5 stars
-  review      String
-  status      ReviewStatus @default(PENDING)
-  source      String?   // e.g., "Website", "Google", "App Store", etc.
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id         Int          @id @default(autoincrement())
+  customerId Int
+  productId  Int?
+  rating     Int // 1-5 stars
+  review     String
+  status     ReviewStatus @default(PENDING)
+  source     String? // e.g., "Website", "Google", "App Store", etc.
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
   // Relations
-  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  product     Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
-  
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
   @@map("reviews")
+}
+
+// ============================================
+// TASKS
+// ============================================
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Task {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  status      TaskStatus   @default(PENDING)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  category    String?
+  assignedTo  String? // User email or name
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("tasks")
 }
