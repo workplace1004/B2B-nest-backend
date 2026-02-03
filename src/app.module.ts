@@ -24,6 +24,8 @@ import { ReplenishmentModule } from './replenishment/replenishment.module';
 import { TasksModule } from './tasks/tasks.module';
 import { SizeFitModule } from './size-fit/size-fit.module';
 import { CostSheetsModule } from './cost-sheets/cost-sheets.module';
+import { DigitalProductPassportModule } from './digital-product-passport/digital-product-passport.module';
+import { ComplianceEvidenceModule } from './compliance-evidence/compliance-evidence.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { CostSheetsModule } from './cost-sheets/cost-sheets.module';
     TasksModule,
     SizeFitModule,
     CostSheetsModule,
+    DigitalProductPassportModule,
+    ComplianceEvidenceModule,
   ],
 })
 export class AppModule {}

@@ -34,6 +34,10 @@ model User {
   orders    Order[]
   customers Customer[] @relation("CustomerOwner")
   auditLogs AuditLog[]
+  quotes    Quote[]
+  proformaInvoices ProformaInvoice[]
+  territory SalesRepTerritory?
+  commissions SalesRepCommission[]
 
   @@map("users")
 }
@@ -96,6 +100,10 @@ model Product {
   pricing            ProductPricing[]
   returns            Return[]
   Replenishment      Replenishment[]
+  digitalProductPassport DigitalProductPassport?
+  complianceEvidences   ComplianceEvidence[]
+  quoteLines         QuoteLine[]
+  proformaInvoiceLines ProformaInvoiceLine[]
 
   @@map("products")
 }
@@ -179,6 +187,8 @@ model Customer {
   owner   User?    @relation("CustomerOwner", fields: [ownerId], references: [id])
   orders  Order[]
   reviews Review[]
+  quotes  Quote[]
+  proformaInvoices ProformaInvoice[]
 
   @@map("customers")
 }
@@ -227,6 +237,8 @@ model Order {
   orderLines OrderLine[]
   shipments  Shipment[]
   returns    Return[]
+  quotes     Quote[]
+  proformaInvoices ProformaInvoice[]
 
   @@map("orders")
 }
@@ -525,6 +537,131 @@ model Return {
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@map("returns")
+}
+
+// ============================================
+// QUOTES & PROFORMA INVOICES
+// ============================================
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+model Quote {
+  id              Int         @id @default(autoincrement())
+  quoteNumber     String      @unique
+  customerId      Int
+  orderId         Int?
+  userId          Int? // Sales rep who created
+  status          QuoteStatus @default(DRAFT)
+  validUntil      DateTime?
+  subtotal        Decimal     @default(0)
+  taxRate         Decimal     @default(0)
+  taxAmount       Decimal     @default(0)
+  discountPercent Decimal     @default(0)
+  discountAmount  Decimal     @default(0)
+  totalAmount     Decimal     @default(0)
+  currency        String      @default("USD")
+  notes           String?
+  terms           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  sentAt          DateTime?
+  acceptedAt      DateTime?
+  rejectedAt      DateTime?
+
+  // Relations
+  customer   Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  order      Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user       User?            @relation(fields: [userId], references: [id])
+  quoteLines QuoteLine[]
+  proformaInvoice ProformaInvoice?
+
+  @@map("quotes")
+}
+
+model QuoteLine {
+  id          Int      @id @default(autoincrement())
+  quoteId     Int
+  productId   Int
+  quantity    Int
+  unitPrice   Decimal
+  totalPrice  Decimal
+  size        String?
+  color       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  quote   Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("quote_lines")
+}
+
+enum ProformaInvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  CANCELLED
+}
+
+model ProformaInvoice {
+  id              Int                    @id @default(autoincrement())
+  invoiceNumber   String                 @unique
+  quoteId         Int?                   @unique
+  orderId         Int?
+  customerId      Int
+  userId          Int? // Sales rep who created
+  status          ProformaInvoiceStatus  @default(DRAFT)
+  subtotal        Decimal                @default(0)
+  taxRate         Decimal                @default(0)
+  taxAmount       Decimal                @default(0)
+  discountPercent Decimal                @default(0)
+  discountAmount  Decimal                @default(0)
+  totalAmount     Decimal                @default(0)
+  currency        String                 @default("USD")
+  notes           String?
+  terms           String?
+  dueDate         DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  sentAt          DateTime?
+  paidAt          DateTime?
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  quote    Quote?   @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  order    Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user     User?    @relation(fields: [userId], references: [id])
+  invoiceLines ProformaInvoiceLine[]
+
+  @@map("proforma_invoices")
+}
+
+model ProformaInvoiceLine {
+  id          Int      @id @default(autoincrement())
+  invoiceId   Int
+  productId   Int
+  quantity    Int
+  unitPrice   Decimal
+  totalPrice  Decimal
+  size        String?
+  color       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  invoice ProformaInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("proforma_invoice_lines")
 }
 
 // ============================================
@@ -838,4 +975,126 @@ model SizeChart {
   updatedAt   DateTime @updatedAt
 
   @@map("size_charts")
+}
+
+// ============================================
+// SUSTAINABILITY & COMPLIANCE
+// ============================================
+
+model DigitalProductPassport {
+  id                Int      @id @default(autoincrement())
+  productId          Int      @unique
+  passportId         String?  @unique // Unique passport identifier
+  manufacturerName   String?
+  manufacturerAddress String?
+  countryOfOrigin    String?
+  productionDate     DateTime?
+  materials          Json?    // Array of materials with percentages: [{ "name": "Cotton", "percentage": 60 }, ...]
+  certifications     String[] // Array of certification IDs (e.g., "GOTS", "OEKO-TEX", "Cradle to Cradle")
+  carbonFootprint    Decimal? // CO2 equivalent in kg
+  waterFootprint     Decimal? // Water usage in liters
+  recyclability      String?  // e.g., "Fully Recyclable", "Partially Recyclable", "Not Recyclable"
+  repairability      String?  // e.g., "Easy", "Moderate", "Difficult"
+  careInstructions   String?
+  disposalInstructions String?
+  traceabilityData   Json?    // Supply chain traceability information
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("digital_product_passports")
+}
+
+enum ComplianceEvidenceType {
+  CERTIFICATION
+  TEST_REPORT
+  MATERIAL_SAFETY
+  ENVIRONMENTAL_IMPACT
+  SUPPLY_CHAIN
+  OTHER
+}
+
+model ComplianceEvidence {
+  id          Int                    @id @default(autoincrement())
+  productId   Int?
+  name        String
+  type        ComplianceEvidenceType @default(OTHER)
+  description String?
+  documentUrl String?                 // URL to the compliance document
+  issuer      String?                 // Organization that issued the evidence
+  issueDate   DateTime?
+  expiryDate  DateTime?
+  certificateNumber String?            // Certificate or document number
+  standards   String[]                // Array of standards (e.g., ["REACH", "RoHS", "CE"])
+  tags        String[]                // Additional tags for categorization
+  isActive    Boolean                 @default(true)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  // Relations
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("compliance_evidences")
+}
+
+// ============================================
+// SALES REPS & TERRITORIES
+// ============================================
+
+model SalesRepTerritory {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  name        String
+  region      String?  // e.g., "North America", "Europe", "Asia-Pacific"
+  countries   String[] // Array of country codes or names
+  states      String[] // Array of state/province names (optional)
+  cities      String[] // Array of city names (optional)
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sales_rep_territories")
+}
+
+enum CommissionType {
+  SALES_VOLUME
+  MARGIN
+  HYBRID
+}
+
+enum CommissionStatus {
+  PENDING
+  CALCULATED
+  APPROVED
+  PAID
+}
+
+model SalesRepCommission {
+  id              Int             @id @default(autoincrement())
+  userId          Int
+  period          String          // e.g., "2024-01", "2024-Q1"
+  type            CommissionType  @default(SALES_VOLUME)
+  salesAmount     Decimal         @default(0)
+  marginAmount    Decimal         @default(0)
+  commissionRate  Decimal         // Percentage or fixed rate
+  commissionAmount Decimal         @default(0)
+  status          CommissionStatus @default(PENDING)
+  notes           String?
+  calculatedAt    DateTime?
+  approvedAt      DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period, type])
+  @@map("sales_rep_commissions")
 }
