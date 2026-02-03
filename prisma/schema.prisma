@@ -92,6 +92,7 @@ model Product {
   reviews            Review[]
   bom                BOM?
   bomComponents      BOMComponent[]
+  costSheet          CostSheet?
   pricing            ProductPricing[]
   returns            Return[]
   Replenishment      Replenishment[]
@@ -454,6 +455,29 @@ model BOMComponent {
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@map("bom_components")
+}
+
+// ============================================
+// COST SHEETS
+// ============================================
+
+model CostSheet {
+  id           Int      @id @default(autoincrement())
+  productId    Int      @unique
+  materials    Decimal  @default(0) // Materials cost
+  labor        Decimal  @default(0) // Labor cost
+  overhead     Decimal  @default(0) // Overhead cost
+  totalCost    Decimal  @default(0) // Calculated: materials + labor + overhead
+  sellingPrice Decimal? @default(0) // Target selling price
+  margin       Decimal? // Calculated margin percentage
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("cost_sheets")
 }
 
 // ============================================

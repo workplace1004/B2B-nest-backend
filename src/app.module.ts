@@ -23,6 +23,7 @@ import { ExceptionsModule } from './exceptions/exceptions.module';
 import { ReplenishmentModule } from './replenishment/replenishment.module';
 import { TasksModule } from './tasks/tasks.module';
 import { SizeFitModule } from './size-fit/size-fit.module';
+import { CostSheetsModule } from './cost-sheets/cost-sheets.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { SizeFitModule } from './size-fit/size-fit.module';
     ReplenishmentModule,
     TasksModule,
     SizeFitModule,
+    CostSheetsModule,
   ],
 })
 export class AppModule {}
