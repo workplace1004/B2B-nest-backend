@@ -60,3 +60,4 @@ export class CreateDigitalProductPassportDto {
   traceabilityData?: any;
 }
 
+
