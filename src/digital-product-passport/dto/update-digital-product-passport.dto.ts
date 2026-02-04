@@ -4,3 +4,4 @@ import { CreateDigitalProductPassportDto } from './create-digital-product-passpo
 export class UpdateDigitalProductPassportDto extends PartialType(CreateDigitalProductPassportDto) {}
 
 
+
