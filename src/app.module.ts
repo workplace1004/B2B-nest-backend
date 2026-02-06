@@ -26,6 +26,15 @@ import { SizeFitModule } from './size-fit/size-fit.module';
 import { CostSheetsModule } from './cost-sheets/cost-sheets.module';
 import { DigitalProductPassportModule } from './digital-product-passport/digital-product-passport.module';
 import { ComplianceEvidenceModule } from './compliance-evidence/compliance-evidence.module';
+import { RolesModule } from './roles/roles.module';
+import { BrandsModule } from './brands/brands.module';
+import { MarketsModule } from './markets/markets.module';
+import { LocalizationsModule } from './localizations/localizations.module';
+import { ApiKeysModule } from './api-keys/api-keys.module';
+import { SyncHealthModule } from './sync-health/sync-health.module';
+import { NumberingRulesModule } from './numbering-rules/numbering-rules.module';
+import { TaxDefaultsModule } from './tax-defaults/tax-defaults.module';
+import { WarehouseDefaultsModule } from './warehouse-defaults/warehouse-defaults.module';
 
 @Module({
   imports: [
@@ -35,6 +44,15 @@ import { ComplianceEvidenceModule } from './compliance-evidence/compliance-evide
     PrismaModule,
     AuthModule,
     UsersModule,
+    RolesModule,
+    BrandsModule,
+    MarketsModule,
+    LocalizationsModule,
+    ApiKeysModule,
+    SyncHealthModule,
+    NumberingRulesModule,
+    TaxDefaultsModule,
+    WarehouseDefaultsModule,
     ProductsModule,
     CollectionsModule,
     InventoryModule,

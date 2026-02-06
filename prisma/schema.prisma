@@ -26,6 +26,7 @@ model User {
   firstName String
   lastName  String
   role      UserRole @default(B2B)
+  roleId    Int?     // Reference to Role table for granular permissions
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -38,6 +39,7 @@ model User {
   proformaInvoices ProformaInvoice[]
   territory SalesRepTerritory?
   commissions SalesRepCommission[]
+  roleRef   Role?    @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
   @@map("users")
 }
@@ -1097,4 +1099,252 @@ model SalesRepCommission {
 
   @@unique([userId, period, type])
   @@map("sales_rep_commissions")
+}
+
+// ============================================
+// ORGANIZATION SETTINGS - BRANDS & MARKETS
+// ============================================
+
+enum BrandStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum MarketStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Brand {
+  id          Int          @id @default(autoincrement())
+  name        String
+  code        String       @unique
+  description String?
+  logo        String?
+  status      BrandStatus  @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  brandMarkets BrandMarket[]
+
+  @@map("brands")
+}
+
+model Market {
+  id        Int          @id @default(autoincrement())
+  name      String
+  code      String       @unique
+  region    String?
+  country   String
+  currency  String
+  language  String
+  timezone  String
+  status    MarketStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  // Relations
+  brandMarkets BrandMarket[]
+  localizations Localization[]
+
+  @@map("markets")
+}
+
+// Many-to-many relationship between Brand and Market
+model BrandMarket {
+  id        Int      @id @default(autoincrement())
+  brandId   Int
+  marketId  Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  brand  Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@unique([brandId, marketId])
+  @@map("brand_markets")
+}
+
+// ============================================
+// LOCALIZATION SETTINGS
+// ============================================
+
+enum SizeSystem {
+  US
+  EU
+  UK
+  JP
+  CN
+  AU
+}
+
+model Localization {
+  id           Int        @id @default(autoincrement())
+  marketId     Int        @unique
+  language     String
+  currency     String
+  dateFormat   String     @default("MM/DD/YYYY")
+  timeFormat   String     @default("12h")
+  numberFormat String     @default("en-US")
+  sizeSystem   SizeSystem @default(US)
+  weightUnit   String     @default("kg")
+  lengthUnit   String     @default("cm")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@map("localizations")
+}
+
+// ============================================
+// API KEYS & WEBHOOKS
+// ============================================
+
+enum ApiKeyType {
+  API_KEY
+  WEBHOOK
+}
+
+model ApiKey {
+  id          Int        @id @default(autoincrement())
+  name        String
+  key         String     @unique // Encrypted/hashed key
+  type        ApiKeyType
+  description String?
+  permissions String[]   // Array of permission strings
+  lastUsed    DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("api_keys")
+}
+
+// ============================================
+// SYNC HEALTH
+// ============================================
+
+enum SyncStatus {
+  HEALTHY
+  WARNING
+  ERROR
+  SYNCING
+}
+
+model SyncHealth {
+  id            Int        @id @default(autoincrement())
+  channelId     Int        @unique // Reference to Integration or Channel
+  channelName    String
+  status        SyncStatus @default(HEALTHY)
+  lastSync      DateTime?
+  nextSync      DateTime?
+  recordsSynced Int        @default(0)
+  recordsFailed Int        @default(0)
+  syncDuration  Int?      // Duration in seconds
+  errorMessage  String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("sync_health")
+}
+
+// ============================================
+// SYSTEM SETTINGS
+// ============================================
+
+enum NumberingRuleType {
+  SKU
+  EAN
+  BARCODE
+}
+
+enum NumberingRuleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model NumberingRule {
+  id              Int                  @id @default(autoincrement())
+  name            String
+  type            NumberingRuleType
+  prefix          String?
+  suffix          String?
+  length          Int                  @default(8)
+  sequenceStart   Int                  @default(1)
+  currentSequence Int                  @default(1)
+  format          String               // e.g., "{prefix}-{sequence}"
+  status          NumberingRuleStatus  @default(ACTIVE)
+  description     String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@map("numbering_rules")
+}
+
+enum TaxType {
+  VAT
+  SALES_TAX
+  GST
+}
+
+model TaxDefault {
+  id          Int      @id @default(autoincrement())
+  name        String
+  type        TaxType
+  rate        Decimal  // Tax rate as percentage
+  country     String
+  region      String?
+  isDefault   Boolean  @default(false)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tax_defaults")
+}
+
+enum WarehouseDefaultStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model WarehouseDefault {
+  id          Int                     @id @default(autoincrement())
+  name        String
+  code        String                  @unique
+  address     String
+  city        String
+  state       String?
+  country     String
+  postalCode  String
+  isDefault   Boolean                 @default(false)
+  status      WarehouseDefaultStatus  @default(ACTIVE)
+  capacity    Int?
+  description String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@map("warehouse_defaults")
+}
+
+// ============================================
+// ROLES & PERMISSIONS
+// ============================================
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  permissions String[] // Array of permission strings (e.g., ["inventory:view", "orders:create"])
+  isSystemRole Boolean  @default(false) // System roles cannot be deleted
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users User[]
+
+  @@map("roles")
 }
