@@ -1348,3 +1348,81 @@ model Role {
 
   @@map("roles")
 }
+
+// ============================================
+// DATA IMPORTS & EXPORTS
+// ============================================
+
+enum DataImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum DataImportType {
+  PRODUCTS
+  ORDERS
+  CUSTOMERS
+  INVENTORY
+  CUSTOM
+}
+
+model DataImport {
+  id              Int              @id @default(autoincrement())
+  fileName        String
+  type            DataImportType   @default(CUSTOM)
+  status          DataImportStatus @default(PENDING)
+  recordsTotal    Int              @default(0)
+  recordsProcessed Int             @default(0)
+  recordsFailed   Int              @default(0)
+  uploadedBy      String           // User email or name
+  uploadedAt      DateTime         @default(now())
+  completedAt     DateTime?
+  errorMessage    String?
+  fileUrl         String?          // Path to uploaded file
+  filePath        String?          // Server file path
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("data_imports")
+}
+
+enum DataExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum DataExportType {
+  PRODUCTS
+  ORDERS
+  CUSTOMERS
+  INVENTORY
+  CUSTOM
+}
+
+enum DataExportFormat {
+  CSV
+  EXCEL
+}
+
+model DataExport {
+  id            Int              @id @default(autoincrement())
+  name          String
+  format        DataExportFormat @default(CSV)
+  type          DataExportType   @default(CUSTOM)
+  status        DataExportStatus @default(PENDING)
+  recordsCount  Int              @default(0)
+  fileSize      Int?             // File size in bytes
+  createdBy     String           // User email or name
+  createdAt     DateTime         @default(now())
+  completedAt   DateTime?
+  errorMessage  String?
+  fileUrl       String?          // Path to exported file
+  filePath      String?          // Server file path
+  updatedAt     DateTime         @updatedAt
+
+  @@map("data_exports")
+}

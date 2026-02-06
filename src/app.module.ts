@@ -35,6 +35,10 @@ import { SyncHealthModule } from './sync-health/sync-health.module';
 import { NumberingRulesModule } from './numbering-rules/numbering-rules.module';
 import { TaxDefaultsModule } from './tax-defaults/tax-defaults.module';
 import { WarehouseDefaultsModule } from './warehouse-defaults/warehouse-defaults.module';
+import { DataImportsModule } from './data-imports/data-imports.module';
+import { DataExportsModule } from './data-exports/data-exports.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
+import { ProformaInvoicesModule } from './proforma-invoices/proforma-invoices.module';
 
 @Module({
   imports: [
@@ -53,6 +57,10 @@ import { WarehouseDefaultsModule } from './warehouse-defaults/warehouse-defaults
     NumberingRulesModule,
     TaxDefaultsModule,
     WarehouseDefaultsModule,
+    DataImportsModule,
+    DataExportsModule,
+    AuditLogsModule,
+    ProformaInvoicesModule,
     ProductsModule,
     CollectionsModule,
     InventoryModule,
