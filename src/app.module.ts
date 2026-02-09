@@ -38,7 +38,18 @@ import { WarehouseDefaultsModule } from './warehouse-defaults/warehouse-defaults
 import { DataImportsModule } from './data-imports/data-imports.module';
 import { DataExportsModule } from './data-exports/data-exports.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
+import { AuditTrailModule } from './audit-trail/audit-trail.module';
 import { ProformaInvoicesModule } from './proforma-invoices/proforma-invoices.module';
+import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { ShipmentsModule } from './shipments/shipments.module';
+import { AccountingFieldsModule } from './accounting-fields/accounting-fields.module';
+import { VismaFieldsModule } from './visma-fields/visma-fields.module';
+import { VismaMappingsModule } from './visma-mappings/visma-mappings.module';
+import { SyncLogsModule } from './sync-logs/sync-logs.module';
+import { CurrenciesModule } from './currencies/currencies.module';
+import { FxRatesModule } from './fx-rates/fx-rates.module';
+import { MarketCurrencySettingsModule } from './market-currency-settings/market-currency-settings.module';
+import { CreditNotesModule } from './credit-notes/credit-notes.module';
 
 @Module({
   imports: [
@@ -60,7 +71,18 @@ import { ProformaInvoicesModule } from './proforma-invoices/proforma-invoices.mo
     DataImportsModule,
     DataExportsModule,
     AuditLogsModule,
+    AuditTrailModule,
     ProformaInvoicesModule,
+    PurchaseOrdersModule,
+    ShipmentsModule,
+    AccountingFieldsModule,
+    VismaFieldsModule,
+    VismaMappingsModule,
+    SyncLogsModule,
+    CurrenciesModule,
+    FxRatesModule,
+    MarketCurrencySettingsModule,
+    CreditNotesModule,
     ProductsModule,
     CollectionsModule,
     InventoryModule,

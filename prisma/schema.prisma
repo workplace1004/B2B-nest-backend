@@ -191,6 +191,7 @@ model Customer {
   reviews Review[]
   quotes  Quote[]
   proformaInvoices ProformaInvoice[]
+  creditNotes CreditNote[]
 
   @@map("customers")
 }
@@ -537,6 +538,7 @@ model Return {
   // Relations
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Restrict)
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  creditNotes CreditNote[]
 
   @@map("returns")
 }
@@ -642,6 +644,7 @@ model ProformaInvoice {
   order    Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
   user     User?    @relation(fields: [userId], references: [id])
   invoiceLines ProformaInvoiceLine[]
+  creditNotes CreditNote[]
 
   @@map("proforma_invoices")
 }
@@ -1147,6 +1150,7 @@ model Market {
   // Relations
   brandMarkets BrandMarket[]
   localizations Localization[]
+  marketCurrencySettings MarketCurrencySetting[]
 
   @@map("markets")
 }
@@ -1295,7 +1299,8 @@ model TaxDefault {
   id          Int      @id @default(autoincrement())
   name        String
   type        TaxType
-  rate        Decimal  // Tax rate as percentage
+  taxRate     Decimal? // Tax rate as percentage (for Sales Tax)
+  vatRate     Decimal? // VAT rate as percentage (for VAT)
   country     String
   region      String?
   isDefault   Boolean  @default(false)
@@ -1425,4 +1430,84 @@ model DataExport {
   updatedAt     DateTime         @updatedAt
 
   @@map("data_exports")
+}
+
+// ============================================
+// FX RATES & CURRENCY SETTINGS
+// ============================================
+
+model FxRate {
+  id            Int      @id @default(autoincrement())
+  fromCurrency  String
+  toCurrency    String
+  rate          Decimal  @db.Decimal(18, 6)
+  previousRate  Decimal? @db.Decimal(18, 6)
+  change        Decimal? @db.Decimal(18, 6)
+  changePercent Decimal? @db.Decimal(10, 4)
+  source        String   @default("API")
+  lastUpdated   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([fromCurrency, toCurrency])
+  @@index([fromCurrency])
+  @@index([toCurrency])
+  @@map("fx_rates")
+}
+
+model MarketCurrencySetting {
+  id                  Int      @id @default(autoincrement())
+  marketId            Int?
+  marketName          String
+  marketCode          String
+  region              String?
+  defaultCurrency     String
+  supportedCurrencies String[] // Array of currency codes
+  autoUpdateRates     Boolean  @default(true)
+  isActive            Boolean  @default(true)
+  roundingPrecision   Int      @default(2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  market Market? @relation(fields: [marketId], references: [id], onDelete: SetNull)
+
+  @@unique([marketCode])
+  @@index([marketId])
+  @@map("market_currency_settings")
+}
+
+model CreditNote {
+  id                Int      @id @default(autoincrement())
+  creditNoteNumber  String   @unique
+  invoiceId         Int?
+  returnId          Int?
+  customerId        Int
+  amount            Decimal  @db.Decimal(18, 2)
+  currency          String   @default("USD")
+  reason            String?
+  status            CreditNoteStatus @default(DRAFT)
+  issuedDate        DateTime?
+  appliedDate       DateTime?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  invoice ProformaInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  return  Return?          @relation(fields: [returnId], references: [id], onDelete: SetNull)
+  customer Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([customerId])
+  @@index([invoiceId])
+  @@index([returnId])
+  @@index([status])
+  @@map("credit_notes")
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
+  APPLIED
+  CANCELLED
 }

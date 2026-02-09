@@ -9,7 +9,12 @@ export class CreateTaxDefaultDto {
   type: TaxType;
 
   @IsNumber()
-  rate: number;
+  @IsOptional()
+  taxRate?: number; // Tax rate for Sales Tax
+
+  @IsNumber()
+  @IsOptional()
+  vatRate?: number; // VAT rate for VAT
 
   @IsString()
   country: string;

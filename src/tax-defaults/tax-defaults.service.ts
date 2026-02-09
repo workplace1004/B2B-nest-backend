@@ -83,11 +83,26 @@ export class TaxDefaultsService {
   async remove(id: number) {
     const taxDefault = await this.findOne(id);
     
-    await this.prisma.taxDefault.delete({
-      where: { id },
-    });
+    try {
+      await this.prisma.taxDefault.delete({
+        where: { id },
+      });
 
-    return this.mapTaxDefault(taxDefault);
+      return this.mapTaxDefault(taxDefault);
+    } catch (error: any) {
+      // Handle foreign key constraint errors
+      if (error.code === 'P2003') {
+        throw new NotFoundException(
+          `Cannot delete tax default: It is being used by other records. Please remove all references first.`
+        );
+      }
+      // Handle record not found errors
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Tax default with ID ${id} not found`);
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   private mapTaxDefault(tax: any) {
@@ -95,7 +110,8 @@ export class TaxDefaultsService {
       id: tax.id,
       name: tax.name,
       type: tax.type?.toLowerCase().replace('_', '-') || 'vat',
-      rate: Number(tax.rate),
+      taxRate: tax.taxRate !== null && tax.taxRate !== undefined ? Number(tax.taxRate) : null,
+      vatRate: tax.vatRate !== null && tax.vatRate !== undefined ? Number(tax.vatRate) : null,
       country: tax.country,
       region: tax.region,
       isDefault: tax.isDefault,
