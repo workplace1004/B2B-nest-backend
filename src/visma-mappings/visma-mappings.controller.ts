@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
-import { VismaMappingsService, VismaMapping } from './visma-mappings.service';
+import { VismaMappingsService } from './visma-mappings.service';
 import { CreateVismaMappingDto } from './dto/create-visma-mapping.dto';
 import { UpdateVismaMappingDto } from './dto/update-visma-mapping.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -10,7 +10,7 @@ export class VismaMappingsController {
   constructor(private readonly vismaMappingsService: VismaMappingsService) {}
 
   @Post()
-  create(@Body() createVismaMappingDto: CreateVismaMappingDto): { data: VismaMapping } {
+  create(@Body() createVismaMappingDto: CreateVismaMappingDto) {
     return this.vismaMappingsService.create(createVismaMappingDto);
   }
 

@@ -31,7 +31,14 @@ export class BOMController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBOMDto: UpdateBOMDto) {
-    return this.bomService.update(+id, updateBOMDto);
+    console.log('BOM Update Request:', { id, updateBOMDto });
+    console.log('BOM Update Request JSON:', JSON.stringify(updateBOMDto, null, 2));
+    try {
+      return this.bomService.update(+id, updateBOMDto);
+    } catch (error) {
+      console.error('BOM Update Controller Error:', error);
+      throw error;
+    }
   }
 
   @Delete(':id')

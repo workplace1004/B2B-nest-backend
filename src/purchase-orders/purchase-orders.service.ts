@@ -64,11 +64,19 @@ export class PurchaseOrdersService {
         where,
         include: {
           supplier: true,
+          bom: {
+            include: {
+              product: true,
+            },
+          },
           lines: {
             include: {
               product: true,
             },
           },
+          approvals: true,
+          wipTracking: true,
+          batches: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -85,11 +93,19 @@ export class PurchaseOrdersService {
       where: { id },
       include: {
         supplier: true,
+        bom: {
+          include: {
+            product: true,
+          },
+        },
         lines: {
           include: {
             product: true,
           },
         },
+        approvals: true,
+        wipTracking: true,
+        batches: true,
       },
     });
 

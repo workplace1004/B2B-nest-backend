@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditAction } from '@prisma/client';
 
 @Injectable()
 export class AuditLogsService {
@@ -53,6 +54,38 @@ export class AuditLogsService {
     }
 
     return auditLog;
+  }
+
+  async create(data: {
+    userId: number;
+    action: AuditAction;
+    entityType: string;
+    entityId?: number | null;
+    changes?: any;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  }) {
+    return this.prisma.auditLog.create({
+      data: {
+        userId: data.userId,
+        action: data.action,
+        entityType: data.entityType,
+        entityId: data.entityId || null,
+        changes: data.changes || null,
+        ipAddress: data.ipAddress || null,
+        userAgent: data.userAgent || null,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
   }
 }
 

@@ -92,33 +92,61 @@ export class CostSheetsService {
   }
 
   async update(id: number, updateCostSheetDto: UpdateCostSheetDto) {
-    await this.findOne(id);
-    
-    const { materials, labor, overhead, sellingPrice, notes } = updateCostSheetDto;
-    const totalCost = (parseFloat(materials?.toString() || '0') || 0) + 
-                      (parseFloat(labor?.toString() || '0') || 0) + 
-                      (parseFloat(overhead?.toString() || '0') || 0);
-    
-    let margin = null;
-    if (sellingPrice && parseFloat(sellingPrice.toString()) > 0) {
-      margin = ((parseFloat(sellingPrice.toString()) - totalCost) / parseFloat(sellingPrice.toString())) * 100;
-    }
+    try {
+      console.log('Cost Sheet Service Update:', { id, updateCostSheetDto });
+      
+      await this.findOne(id);
+      
+      const { materials, labor, overhead, sellingPrice, notes } = updateCostSheetDto;
+      const totalCost = (parseFloat(materials?.toString() || '0') || 0) + 
+                        (parseFloat(labor?.toString() || '0') || 0) + 
+                        (parseFloat(overhead?.toString() || '0') || 0);
+      
+      let margin = null;
+      if (sellingPrice && parseFloat(sellingPrice.toString()) > 0) {
+        margin = ((parseFloat(sellingPrice.toString()) - totalCost) / parseFloat(sellingPrice.toString())) * 100;
+      }
 
-    return this.prisma.costSheet.update({
-      where: { id },
-      data: {
-        materials: materials !== undefined ? materials : undefined,
-        labor: labor !== undefined ? labor : undefined,
-        overhead: overhead !== undefined ? overhead : undefined,
+      const updateData: any = {
         totalCost,
-        sellingPrice: sellingPrice !== undefined ? sellingPrice : undefined,
-        margin: margin !== null ? margin : undefined,
-        notes: notes !== undefined ? notes : undefined,
-      },
-      include: {
-        product: true,
-      },
-    });
+      };
+
+      // Only include fields that are provided
+      if (materials !== undefined) {
+        updateData.materials = Number(materials) || 0;
+      }
+      if (labor !== undefined) {
+        updateData.labor = Number(labor) || 0;
+      }
+      if (overhead !== undefined) {
+        updateData.overhead = Number(overhead) || 0;
+      }
+      if (sellingPrice !== undefined && sellingPrice !== null) {
+        updateData.sellingPrice = Number(sellingPrice);
+        if (margin !== null) {
+          updateData.margin = margin;
+        }
+      }
+      if (notes !== undefined && notes !== null && notes.trim()) {
+        updateData.notes = notes.trim();
+      }
+
+      console.log('Cost Sheet Update Data:', JSON.stringify(updateData, null, 2));
+
+      const costSheet = await this.prisma.costSheet.update({
+        where: { id },
+        data: updateData,
+        include: {
+          product: true,
+        },
+      });
+
+      console.log('Cost Sheet Updated Successfully:', costSheet.id);
+      return costSheet;
+    } catch (error) {
+      console.error('Cost Sheet Update Error:', error);
+      throw error;
+    }
   }
 
   async remove(id: number) {

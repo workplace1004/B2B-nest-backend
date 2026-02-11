@@ -1,6 +1,9 @@
-import { Controller, Get, Post, Delete, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Query, Body, UseGuards, Request, Res, NotFoundException } from '@nestjs/common';
 import { DataExportsService } from './data-exports.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Controller('data-exports')
 @UseGuards(JwtAuthGuard)
@@ -36,6 +39,30 @@ export class DataExportsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.dataExportsService.remove(+id);
+  }
+
+  @Get(':id/download')
+  async download(@Param('id') id: string, @Res() res: Response) {
+    const exportRecord = await this.dataExportsService.findOne(+id);
+    
+    if (!exportRecord.data || exportRecord.data.status !== 'completed') {
+      throw new NotFoundException('Export not found or not ready for download');
+    }
+
+    const filePath = exportRecord.data.filePath || path.join(process.cwd(), 'exports', `export-${id}.${exportRecord.data.format === 'excel' ? 'xlsx' : 'csv'}`);
+
+    if (!fs.existsSync(filePath)) {
+      throw new NotFoundException('Export file not found');
+    }
+
+    const fileExtension = exportRecord.data.format === 'excel' ? 'xlsx' : 'csv';
+    const fileName = `${exportRecord.data.name || `export-${id}`}.${fileExtension}`;
+
+    res.setHeader('Content-Type', fileExtension === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
   }
 }
 

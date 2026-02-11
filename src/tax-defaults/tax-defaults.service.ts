@@ -88,7 +88,7 @@ export class TaxDefaultsService {
         where: { id },
       });
 
-      return this.mapTaxDefault(taxDefault);
+      return taxDefault; // findOne already returns a mapped object, no need to map again
     } catch (error: any) {
       // Handle foreign key constraint errors
       if (error.code === 'P2003') {

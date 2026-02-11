@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class DataExportsService {
@@ -48,28 +50,54 @@ export class DataExportsService {
     // Simulate processing delay
     setTimeout(async () => {
       try {
+        // Get export record
+        const exportRecord = await this.prisma.dataExport.findUnique({
+          where: { id: exportId },
+        });
+
+        if (!exportRecord) {
+          return;
+        }
+
         // Update status to PROCESSING
         await this.prisma.dataExport.update({
           where: { id: exportId },
           data: { status: 'PROCESSING' },
         });
 
-        // Simulate processing time (5 seconds)
+        // Simulate processing time (2 seconds)
         setTimeout(async () => {
           try {
-            // Generate mock data
-            const mockRecordsCount = Math.floor(Math.random() * 1000) + 100;
-            const mockFileSize = mockRecordsCount * 1024; // Approximate file size
-            const fileName = `export-${exportId}.${await this.getExportFormat(exportId)}`;
+            // Generate actual CSV file
+            const csvContent = await this.generateCSV(exportRecord.type);
+            const fileExtension = exportRecord.format === 'EXCEL' ? 'xlsx' : 'csv';
+            const fileName = `export-${exportId}.${fileExtension}`;
+            
+            // Create exports directory if it doesn't exist
+            const exportsDir = path.join(process.cwd(), 'exports');
+            if (!fs.existsSync(exportsDir)) {
+              fs.mkdirSync(exportsDir, { recursive: true });
+            }
+
+            // Write file to disk
+            const filePath = path.join(exportsDir, fileName);
+            fs.writeFileSync(filePath, csvContent, 'utf-8');
+            
+            // Get file size
+            const fileSize = fs.statSync(filePath).size;
+            
+            // Count records (lines minus header)
+            const recordsCount = csvContent.split('\n').length - 1;
             
             // Update status to COMPLETED
             await this.prisma.dataExport.update({
               where: { id: exportId },
               data: {
                 status: 'COMPLETED',
-                recordsCount: mockRecordsCount,
-                fileSize: mockFileSize,
-                fileUrl: `/exports/${fileName}`,
+                recordsCount: recordsCount,
+                fileSize: fileSize,
+                fileUrl: `/data-exports/${exportId}/download`,
+                filePath: filePath,
                 completedAt: new Date(),
               },
             });
@@ -84,11 +112,200 @@ export class DataExportsService {
               },
             });
           }
-        }, 5000); // 5 seconds processing time
+        }, 2000); // 2 seconds processing time
       } catch (error) {
         console.error(`Error processing export ${exportId}:`, error);
       }
-    }, 2000); // 2 seconds delay before starting processing
+    }, 1000); // 1 second delay before starting processing
+  }
+
+  private async generateCSV(exportType: string): Promise<string> {
+    let headers: string[] = [];
+    let rows: any[] = [];
+
+    switch (exportType) {
+      case 'PRODUCTS':
+        // Fetch all products
+        const products = await this.prisma.product.findMany({
+          include: {
+            collection: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        headers = [
+          'ID',
+          'Name',
+          'SKU',
+          'Style',
+          'Sizes',
+          'Colors',
+          'Materials',
+          'EAN',
+          'Description',
+          'Base Price',
+          'Price',
+          'Collection',
+          'Created At',
+          'Updated At',
+        ];
+
+        rows = products.map((product) => [
+          product.id,
+          product.name,
+          product.sku,
+          product.style || '',
+          product.sizes.join('; '),
+          product.colors.join('; '),
+          product.materials.join('; '),
+          product.ean || '',
+          product.description || '',
+          product.basePrice.toString(),
+          product.price?.toString() || '',
+          product.collection?.name || '',
+          product.createdAt.toISOString(),
+          product.updatedAt.toISOString(),
+        ]);
+        break;
+
+      case 'ORDERS':
+        const orders = await this.prisma.order.findMany({
+          include: {
+            customer: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        headers = [
+          'ID',
+          'Order Number',
+          'Customer',
+          'Status',
+          'Type',
+          'Total Amount',
+          'Currency',
+          'Order Date',
+          'Required Date',
+          'Created At',
+        ];
+
+        rows = orders.map((order) => [
+          order.id,
+          order.orderNumber,
+          order.customer?.name || '',
+          order.status,
+          order.type,
+          order.totalAmount.toString(),
+          order.currency,
+          order.orderDate.toISOString(),
+          order.requiredDate?.toISOString() || '',
+          order.createdAt.toISOString(),
+        ]);
+        break;
+
+      case 'CUSTOMERS':
+        const customers = await this.prisma.customer.findMany({
+          orderBy: { createdAt: 'desc' },
+        });
+
+        headers = [
+          'ID',
+          'Name',
+          'Email',
+          'Phone',
+          'Type',
+          'Company Name',
+          'Contact Person',
+          'Address',
+          'City',
+          'Country',
+          'Postal Code',
+          'Credit Limit',
+          'Created At',
+          'Updated At',
+        ];
+
+        rows = customers.map((customer) => [
+          customer.id,
+          customer.name,
+          customer.email || '',
+          customer.phone || '',
+          customer.type,
+          customer.companyName || '',
+          customer.contactPerson || '',
+          customer.address || '',
+          customer.city || '',
+          customer.country || '',
+          customer.postalCode || '',
+          customer.creditLimit?.toString() || '',
+          customer.createdAt.toISOString(),
+          customer.updatedAt.toISOString(),
+        ]);
+        break;
+
+      case 'INVENTORY':
+        const inventory = await this.prisma.inventory.findMany({
+          include: {
+            product: true,
+            warehouse: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        headers = [
+          'ID',
+          'Product Name',
+          'SKU',
+          'Warehouse',
+          'Quantity',
+          'Reserved Quantity',
+          'Available Quantity',
+          'Reorder Point',
+          'Safety Stock',
+          'Last Updated',
+          'Created At',
+          'Updated At',
+        ];
+
+        rows = inventory.map((item) => [
+          item.id,
+          item.product?.name || '',
+          item.product?.sku || '',
+          item.warehouse?.name || '',
+          item.quantity.toString(),
+          item.reservedQty.toString(),
+          item.availableQty.toString(),
+          item.reorderPoint.toString(),
+          item.safetyStock.toString(),
+          item.lastUpdated.toISOString(),
+          item.createdAt.toISOString(),
+          item.updatedAt.toISOString(),
+        ]);
+        break;
+
+      default:
+        headers = ['ID', 'Name', 'Created At'];
+        rows = [[1, 'Sample', new Date().toISOString()]];
+    }
+
+    // Generate CSV content
+    const csvRows = [
+      headers.join(','),
+      ...rows.map((row) =>
+        row
+          .map((cell: any) => {
+            // Escape commas and quotes in cell values
+            const cellStr = String(cell || '');
+            if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+              return `"${cellStr.replace(/"/g, '""')}"`;
+            }
+            return cellStr;
+          })
+          .join(','),
+      ),
+    ];
+
+    return csvRows.join('\n');
   }
 
   private async getExportFormat(exportId: number): Promise<string> {
@@ -156,6 +373,7 @@ export class DataExportsService {
         completedAt: exportRecord.completedAt?.toISOString(),
         errorMessage: exportRecord.errorMessage,
         fileUrl: exportRecord.fileUrl,
+        filePath: exportRecord.filePath,
       },
     };
   }

@@ -37,10 +37,23 @@ export class OrdersService {
     });
   }
 
-  async findAll(skip = 0, take = 10, status?: string, customerId?: number) {
+  async findAll(skip = 0, take = 10, status?: string, customerId?: number, type?: string, search?: string) {
     const where: any = {};
-    if (status) where.status = status;
+    if (status && status !== 'all') where.status = status;
     if (customerId) where.customerId = customerId;
+    if (type && type !== 'all') {
+      if (type === 'B2B') {
+        where.type = { in: ['B2B', 'WHOLESALE'] };
+      } else {
+        where.type = type;
+      }
+    }
+    if (search) {
+      where.OR = [
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { customer: { name: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.order.findMany({
@@ -54,8 +67,14 @@ export class OrdersService {
               product: true,
             },
           },
+          shipments: {
+            select: {
+              id: true,
+              status: true,
+            },
+          },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { orderDate: 'desc' },
       }),
       this.prisma.order.count({ where }),
     ]);

@@ -55,14 +55,31 @@ export class MarketCurrencySettingsService {
       if (updateDto.marketId !== undefined) {
         updateData.marketId = typeof updateDto.marketId === 'string' ? parseInt(updateDto.marketId) : updateDto.marketId;
       }
-      if (updateDto.marketName !== undefined) updateData.marketName = updateDto.marketName;
-      if (updateDto.marketCode !== undefined) updateData.marketCode = updateDto.marketCode;
-      if (updateDto.region !== undefined) updateData.region = updateDto.region;
-      if (updateDto.defaultCurrency !== undefined) updateData.defaultCurrency = updateDto.defaultCurrency;
-      if (updateDto.supportedCurrencies !== undefined) updateData.supportedCurrencies = updateDto.supportedCurrencies;
-      if (updateDto.autoUpdateRates !== undefined) updateData.autoUpdateRates = updateDto.autoUpdateRates;
-      if (updateDto.isActive !== undefined) updateData.isActive = updateDto.isActive;
-      if (updateDto.roundingPrecision !== undefined) updateData.roundingPrecision = updateDto.roundingPrecision;
+      if (updateDto.marketName !== undefined) {
+        updateData.marketName = typeof updateDto.marketName === 'string' ? updateDto.marketName.trim() : updateDto.marketName;
+      }
+      if (updateDto.marketCode !== undefined) {
+        updateData.marketCode = typeof updateDto.marketCode === 'string' ? updateDto.marketCode.trim() : updateDto.marketCode;
+      }
+      if (updateDto.region !== undefined) {
+        // Convert empty string to null for optional field
+        updateData.region = typeof updateDto.region === 'string' ? (updateDto.region.trim() || null) : updateDto.region;
+      }
+      if (updateDto.defaultCurrency !== undefined) {
+        updateData.defaultCurrency = typeof updateDto.defaultCurrency === 'string' ? updateDto.defaultCurrency.trim() : updateDto.defaultCurrency;
+      }
+      if (updateDto.supportedCurrencies !== undefined) {
+        updateData.supportedCurrencies = updateDto.supportedCurrencies;
+      }
+      if (updateDto.autoUpdateRates !== undefined) {
+        updateData.autoUpdateRates = updateDto.autoUpdateRates;
+      }
+      if (updateDto.isActive !== undefined) {
+        updateData.isActive = updateDto.isActive;
+      }
+      if (updateDto.roundingPrecision !== undefined) {
+        updateData.roundingPrecision = updateDto.roundingPrecision;
+      }
 
       const setting = await this.prisma.marketCurrencySetting.update({
         where: { id: parseInt(id) },

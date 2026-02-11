@@ -27,11 +27,6 @@ export class CreateDigitalProductPassportDto {
   @IsOptional()
   materials?: Array<{ name: string; percentage: number }>;
 
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  certifications?: string[];
-
   @IsNumber()
   @IsOptional()
   carbonFootprint?: number;
@@ -59,6 +54,7 @@ export class CreateDigitalProductPassportDto {
   @IsOptional()
   traceabilityData?: any;
 }
+
 
 
 

@@ -23,30 +23,34 @@ export class ReturnsService {
     return returnItem;
   }
 
-  async findAll(skip?: number, take?: number, status?: string) {
+  async findAll(skip = 0, take = 10, status?: string) {
     const where: any = {};
-    if (status) {
+    if (status && status !== 'all') {
       where.status = status;
     }
 
-    const returns = await this.prisma.return.findMany({
-      skip,
-      take,
-      where,
-      include: {
-        order: {
-          include: {
-            customer: true,
+    const [data, total] = await Promise.all([
+      this.prisma.return.findMany({
+        skip: Number(skip),
+        take: Number(take),
+        where,
+        include: {
+          order: {
+            include: {
+              customer: true,
+            },
           },
+          product: true,
+          reverseLogistics: true,
         },
-        product: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prisma.return.count({ where }),
+    ]);
 
-    return returns;
+    return { data, total, skip, take };
   }
 
   async findOne(id: number) {

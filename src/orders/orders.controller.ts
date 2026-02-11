@@ -20,12 +20,16 @@ export class OrdersController {
     @Query('take') take?: string,
     @Query('status') status?: string,
     @Query('customerId') customerId?: string,
+    @Query('type') type?: string,
+    @Query('search') search?: string,
   ) {
     return this.ordersService.findAll(
       skip ? +skip : 0,
       take ? +take : 10,
       status,
       customerId ? +customerId : undefined,
+      type,
+      search,
     );
   }
 

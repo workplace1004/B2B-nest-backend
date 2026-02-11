@@ -3,11 +3,15 @@ import { IntegrationsService } from './integrations.service';
 import { CreateIntegrationDto } from './dto/create-integration.dto';
 import { UpdateIntegrationDto } from './dto/update-integration.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ChannelSyncService, SyncResult } from '../channel-sync/channel-sync.service';
 
 @Controller('integrations')
 @UseGuards(JwtAuthGuard)
 export class IntegrationsController {
-  constructor(private readonly integrationsService: IntegrationsService) {}
+  constructor(
+    private readonly integrationsService: IntegrationsService,
+    private readonly channelSyncService: ChannelSyncService,
+  ) {}
 
   @Post()
   create(@Body() createIntegrationDto: CreateIntegrationDto) {
@@ -32,6 +36,42 @@ export class IntegrationsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.integrationsService.remove(+id);
+  }
+
+  @Post(':id/sync')
+  async syncChannel(@Param('id') id: string): Promise<{ success: boolean; message: string; data?: SyncResult; error?: string }> {
+    try {
+      const result = await this.channelSyncService.syncChannel(+id);
+      return {
+        success: true,
+        message: 'Channel synced successfully',
+        data: result,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Failed to sync channel',
+        error: error.message,
+      };
+    }
+  }
+
+  @Post('sync/all')
+  async syncAllChannels(): Promise<{ success: boolean; message: string; data?: { channelId: number; result: SyncResult }[]; error?: string }> {
+    try {
+      const results = await this.channelSyncService.syncAllChannels();
+      return {
+        success: true,
+        message: 'All channels synced',
+        data: results,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Failed to sync channels',
+        error: error.message,
+      };
+    }
   }
 }
 

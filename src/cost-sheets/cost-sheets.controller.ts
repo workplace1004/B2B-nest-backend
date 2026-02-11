@@ -31,7 +31,14 @@ export class CostSheetsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCostSheetDto: UpdateCostSheetDto) {
-    return this.costSheetsService.update(+id, updateCostSheetDto);
+    console.log('Cost Sheet Update Request:', { id, updateCostSheetDto });
+    console.log('Cost Sheet Update Request JSON:', JSON.stringify(updateCostSheetDto, null, 2));
+    try {
+      return this.costSheetsService.update(+id, updateCostSheetDto);
+    } catch (error) {
+      console.error('Cost Sheet Update Controller Error:', error);
+      throw error;
+    }
   }
 
   @Delete(':id')

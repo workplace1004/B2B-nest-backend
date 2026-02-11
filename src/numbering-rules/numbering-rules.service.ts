@@ -74,13 +74,35 @@ export class NumberingRulesService {
   }
 
   async remove(id: number) {
-    const numberingRule = await this.findOne(id);
-    
-    await this.prisma.numberingRule.delete({
+    // Get the raw Prisma object before deletion
+    const numberingRule = await this.prisma.numberingRule.findUnique({
       where: { id },
     });
 
-    return this.mapNumberingRule(numberingRule);
+    if (!numberingRule) {
+      throw new NotFoundException(`Numbering rule with ID ${id} not found`);
+    }
+
+    try {
+      await this.prisma.numberingRule.delete({
+        where: { id },
+      });
+
+      return this.mapNumberingRule(numberingRule);
+    } catch (error: any) {
+      // Handle foreign key constraint errors
+      if (error.code === 'P2003') {
+        throw new NotFoundException(
+          `Cannot delete numbering rule: It is being used by other records. Please remove all references first.`
+        );
+      }
+      // Handle record not found errors
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Numbering rule with ID ${id} not found`);
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   async incrementSequence(id: number) {

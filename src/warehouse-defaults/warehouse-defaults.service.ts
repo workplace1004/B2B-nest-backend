@@ -110,7 +110,7 @@ export class WarehouseDefaultsService {
       where: { id },
     });
 
-    return this.mapWarehouse(warehouse);
+    return warehouse; // findOne already returns a mapped object, no need to map again
   }
 
   private mapWarehouse(warehouse: any) {

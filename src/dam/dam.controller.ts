@@ -15,8 +15,16 @@ export class DAMController {
   }
 
   @Get()
-  findAll(@Query('productId') productId?: string) {
-    return this.damService.findAll(productId ? +productId : undefined);
+  findAll(
+    @Query('productId') productId?: string,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    return this.damService.findAll(
+      productId ? +productId : undefined,
+      skip ? +skip : undefined,
+      take ? +take : undefined,
+    );
   }
 
   @Get(':id')
@@ -26,7 +34,14 @@ export class DAMController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDAMAssetDto: UpdateDAMAssetDto) {
-    return this.damService.update(+id, updateDAMAssetDto);
+    console.log('DAM Update Request:', { id, updateDAMAssetDto });
+    console.log('DAM Update Request JSON:', JSON.stringify(updateDAMAssetDto, null, 2));
+    try {
+      return this.damService.update(+id, updateDAMAssetDto);
+    } catch (error) {
+      console.error('DAM Update Controller Error:', error);
+      throw error;
+    }
   }
 
   @Delete(':id')

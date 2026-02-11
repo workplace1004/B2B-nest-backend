@@ -17,11 +17,11 @@ export class BOMService {
         components: {
           create: components.map((comp) => ({
             name: comp.name,
-            productId: comp.productId,
+            productId: productId, // Use the BOM's productId for each component
             quantity: comp.quantity || 1,
             unit: comp.unit || 'pcs',
             cost: comp.cost || 0,
-            notes: comp.notes,
+            notes: comp.notes || undefined,
           })),
         },
       },
@@ -103,40 +103,64 @@ export class BOMService {
   }
 
   async update(id: number, updateBOMDto: UpdateBOMDto) {
-    const { components, ...bomData } = updateBOMDto;
+    try {
+      const { components, ...bomData } = updateBOMDto;
 
-    // Check if BOM exists
-    await this.findOne(id);
+      console.log('BOM Service Update:', { id, bomData, componentsCount: components?.length });
 
-    const bom = await this.prisma.bOM.update({
-      where: { id },
-      data: {
+      // Check if BOM exists and get its productId
+      const existingBOM = await this.findOne(id);
+      const bomProductId = existingBOM.productId;
+
+      // Prepare update data
+      const updateData: any = {
         ...bomData,
-        ...(components && {
-          components: {
-            deleteMany: {},
-            create: components.map((comp) => ({
+      };
+
+      // Only update components if provided
+      if (components && Array.isArray(components) && components.length > 0) {
+        updateData.components = {
+          deleteMany: {},
+          create: components.map((comp) => {
+            const componentData: any = {
               name: comp.name,
-              productId: comp.productId,
+              productId: bomProductId, // Use the BOM's productId for each component
               quantity: comp.quantity || 1,
               unit: comp.unit || 'pcs',
               cost: comp.cost || 0,
-              notes: comp.notes,
-            })),
-          },
-        }),
-      },
-      include: {
-        components: {
-          include: {
-            product: true,
-          },
-        },
-        product: true,
-      },
-    });
+            };
+            
+            // Only include notes if it's not empty
+            if (comp.notes && comp.notes.trim()) {
+              componentData.notes = comp.notes.trim();
+            }
+            
+            return componentData;
+          }),
+        };
+      }
 
-    return bom;
+      console.log('BOM Update Data:', JSON.stringify(updateData, null, 2));
+
+      const bom = await this.prisma.bOM.update({
+        where: { id },
+        data: updateData,
+        include: {
+          components: {
+            include: {
+              product: true,
+            },
+          },
+          product: true,
+        },
+      });
+
+      console.log('BOM Updated Successfully:', bom.id);
+      return bom;
+    } catch (error) {
+      console.error('BOM Update Error:', error);
+      throw error;
+    }
   }
 
   async remove(id: number) {
