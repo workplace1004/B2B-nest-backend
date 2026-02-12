@@ -21,6 +21,10 @@ export class CreatePurchaseOrderDto {
   @IsNumber()
   supplierId: number;
 
+  @IsNumber()
+  @IsOptional()
+  bOMId?: number;
+
   @IsEnum(PurchaseOrderStatus)
   @IsOptional()
   status?: PurchaseOrderStatus;

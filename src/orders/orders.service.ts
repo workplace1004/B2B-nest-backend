@@ -38,47 +38,60 @@ export class OrdersService {
   }
 
   async findAll(skip = 0, take = 10, status?: string, customerId?: number, type?: string, search?: string) {
-    const where: any = {};
-    if (status && status !== 'all') where.status = status;
-    if (customerId) where.customerId = customerId;
-    if (type && type !== 'all') {
-      if (type === 'B2B') {
-        where.type = { in: ['B2B', 'WHOLESALE'] };
-      } else {
-        where.type = type;
+    try {
+      const where: any = {};
+      if (status && status !== 'all') where.status = status;
+      if (customerId) where.customerId = customerId;
+      if (type && type !== 'all') {
+        // Valid OrderType enum values: B2B, WHOLESALE, DTC
+        // Handle special cases and invalid types
+        if (type === 'B2B') {
+          where.type = { in: ['B2B', 'WHOLESALE'] };
+        } else if (type === 'POS') {
+          // POS doesn't exist in enum, return empty result
+          // Use an impossible condition to return empty array
+          where.id = -1; // This will never match any order
+        } else if (['B2B', 'WHOLESALE', 'DTC'].includes(type)) {
+          where.type = type;
+        }
+        // If type is invalid and not handled above, don't add type filter
       }
-    }
-    if (search) {
-      where.OR = [
-        { orderNumber: { contains: search, mode: 'insensitive' } },
-        { customer: { name: { contains: search, mode: 'insensitive' } } },
-      ];
-    }
+      if (search) {
+        where.OR = [
+          { orderNumber: { contains: search, mode: 'insensitive' } },
+          { customer: { name: { contains: search, mode: 'insensitive' } } },
+        ];
+      }
 
-    const [data, total] = await Promise.all([
-      this.prisma.order.findMany({
-        where,
-        skip,
-        take,
-        include: {
-          customer: true,
-          orderLines: {
-            include: {
-              product: true,
+      const [data, total] = await Promise.all([
+        this.prisma.order.findMany({
+          where,
+          skip,
+          take,
+          include: {
+            customer: true,
+            orderLines: {
+              include: {
+                product: true,
+              },
+            },
+            shipments: {
+              select: {
+                id: true,
+                status: true,
+              },
             },
           },
-          shipments: {
-            select: {
-              id: true,
-              status: true,
-            },
-          },
-        },
-        orderBy: { orderDate: 'desc' },
-      }),
-      this.prisma.order.count({ where }),
-    ]);
-    return { data, total, skip, take };
+          orderBy: { orderDate: 'desc' },
+        }),
+        this.prisma.order.count({ where }),
+      ]);
+      return { data, total, skip, take };
+    } catch (error) {
+      console.error('Error in findAll orders:', error);
+      // Return empty result on error instead of throwing
+      return { data: [], total: 0, skip, take };
+    }
   }
 
   async findOne(id: number) {

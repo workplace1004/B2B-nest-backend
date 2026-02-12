@@ -20,25 +20,50 @@ export class PurchaseOrdersService {
       );
     }
 
-    const { lines, supplierId, ...orderData } = createPurchaseOrderDto;
+    const { lines, supplierId, bOMId, expectedDate, orderDate, receivedDate, ...orderData } = createPurchaseOrderDto;
+
+    const createData: any = {
+      ...orderData,
+      poNumber,
+      totalAmount,
+      supplier: { connect: { id: supplierId } },
+    };
+
+    // Convert date strings to DateTime objects for Prisma
+    if (expectedDate) {
+      createData.expectedDate = new Date(expectedDate);
+    }
+    if (orderDate) {
+      createData.orderDate = new Date(orderDate);
+    }
+    if (receivedDate) {
+      createData.receivedDate = new Date(receivedDate);
+    }
+
+    // Only include bom connection if bOMId is provided
+    if (bOMId) {
+      createData.bom = { connect: { id: bOMId } };
+    }
+
+    // Only include lines if provided
+    if (lines && lines.length > 0) {
+      createData.lines = {
+        create: lines.map((line) => ({
+          ...line,
+          totalCost: line.totalCost || Number(line.unitCost) * line.quantity,
+        })),
+      };
+    }
 
     return this.prisma.purchaseOrder.create({
-      data: {
-        ...orderData,
-        poNumber,
-        totalAmount,
-        supplier: { connect: { id: supplierId } },
-        lines: lines
-          ? {
-              create: lines.map((line) => ({
-                ...line,
-                totalCost: line.totalCost || Number(line.unitCost) * line.quantity,
-              })),
-            }
-          : undefined,
-      },
+      data: createData,
       include: {
         supplier: true,
+        bom: {
+          include: {
+            product: true,
+          },
+        },
         lines: {
           include: {
             product: true,
@@ -89,40 +114,72 @@ export class PurchaseOrdersService {
   }
 
   async findOne(id: number) {
-    const purchaseOrder = await this.prisma.purchaseOrder.findUnique({
-      where: { id },
-      include: {
-        supplier: true,
-        bom: {
-          include: {
-            product: true,
+    try {
+      const purchaseOrder = await this.prisma.purchaseOrder.findUnique({
+        where: { id },
+        include: {
+          supplier: true,
+          bom: {
+            include: {
+              product: true,
+            },
+          },
+          lines: {
+            include: {
+              product: true,
+            },
+          },
+          approvals: {
+            orderBy: {
+              level: 'asc',
+            },
+          },
+          wipTracking: {
+            orderBy: {
+              createdAt: 'desc',
+            },
+          },
+          batches: {
+            orderBy: {
+              createdAt: 'desc',
+            },
           },
         },
-        lines: {
-          include: {
-            product: true,
-          },
-        },
-        approvals: true,
-        wipTracking: true,
-        batches: true,
-      },
-    });
+      });
 
-    if (!purchaseOrder) {
-      throw new NotFoundException(`Purchase Order with ID ${id} not found`);
+      if (!purchaseOrder) {
+        throw new NotFoundException(`Purchase Order with ID ${id} not found`);
+      }
+
+      return purchaseOrder;
+    } catch (error) {
+      console.error(`Error fetching purchase order ${id}:`, error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      // Re-throw with more context
+      throw new Error(`Failed to fetch purchase order ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-
-    return purchaseOrder;
   }
 
   async update(id: number, updatePurchaseOrderDto: UpdatePurchaseOrderDto) {
     await this.findOne(id);
 
-    const { lines, supplierId, ...orderData } = updatePurchaseOrderDto;
+    const { lines, supplierId, bOMId, expectedDate, orderDate, receivedDate, ...orderData } = updatePurchaseOrderDto;
 
     // Recalculate total if lines are updated
     let updateData: any = { ...orderData };
+
+    // Convert date strings to Date objects for Prisma
+    if (expectedDate !== undefined) {
+      updateData.expectedDate = expectedDate ? new Date(expectedDate) : null;
+    }
+    if (orderDate !== undefined) {
+      updateData.orderDate = orderDate ? new Date(orderDate) : null;
+    }
+    if (receivedDate !== undefined) {
+      updateData.receivedDate = receivedDate ? new Date(receivedDate) : null;
+    }
 
     if (lines && lines.length > 0) {
       const totalAmount = lines.reduce(
@@ -132,25 +189,47 @@ export class PurchaseOrdersService {
       updateData.totalAmount = totalAmount;
     }
 
+    const updatePayload: any = {
+      ...updateData,
+    };
+
+    // Handle supplier connection
+    if (supplierId !== undefined) {
+      updatePayload.supplier = supplierId
+        ? { connect: { id: supplierId } }
+        : { disconnect: true };
+    }
+
+    // Handle BOM connection
+    if (bOMId !== undefined) {
+      updatePayload.bom = bOMId
+        ? { connect: { id: bOMId } }
+        : { disconnect: true };
+    }
+
+    // Handle lines update
+    if (lines !== undefined) {
+      updatePayload.lines = lines && lines.length > 0
+        ? {
+            deleteMany: {},
+            create: lines.map((line) => ({
+              ...line,
+              totalCost: line.totalCost || Number(line.unitCost) * line.quantity,
+            })),
+          }
+        : { deleteMany: {} };
+    }
+
     return this.prisma.purchaseOrder.update({
       where: { id },
-      data: {
-        ...updateData,
-        supplier: supplierId
-          ? { connect: { id: supplierId } }
-          : undefined,
-        lines: lines
-          ? {
-              deleteMany: {},
-              create: lines.map((line) => ({
-                ...line,
-                totalCost: line.totalCost || Number(line.unitCost) * line.quantity,
-              })),
-            }
-          : undefined,
-      },
+      data: updatePayload,
       include: {
         supplier: true,
+        bom: {
+          include: {
+            product: true,
+          },
+        },
         lines: {
           include: {
             product: true,

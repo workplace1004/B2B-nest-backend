@@ -4,6 +4,8 @@ import { CreateCycleCountDto } from './dto/create-cycle-count.dto';
 import { UpdateCycleCountDto } from './dto/update-cycle-count.dto';
 import { CreatePhysicalInventoryDto } from './dto/create-physical-inventory.dto';
 import { UpdatePhysicalInventoryDto } from './dto/update-physical-inventory.dto';
+import { UpdateCycleCountItemDto } from './dto/update-cycle-count-item.dto';
+import { UpdatePhysicalInventoryItemDto } from './dto/update-physical-inventory-item.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('counting')
@@ -83,6 +85,26 @@ export class CountingController {
   @Patch('physical-inventory/:id/start')
   startPhysicalInventory(@Param('id') id: string) {
     return this.countingService.startPhysicalInventory(+id);
+  }
+
+  // Cycle Count Item Endpoints
+  @Patch('cycle-counts/:cycleCountId/items/:itemId')
+  updateCycleCountItem(
+    @Param('cycleCountId') cycleCountId: string,
+    @Param('itemId') itemId: string,
+    @Body() updateItemDto: UpdateCycleCountItemDto,
+  ) {
+    return this.countingService.updateCycleCountItem(+cycleCountId, +itemId, updateItemDto);
+  }
+
+  // Physical Inventory Item Endpoints
+  @Patch('physical-inventory/:physicalInventoryId/items/:itemId')
+  updatePhysicalInventoryItem(
+    @Param('physicalInventoryId') physicalInventoryId: string,
+    @Param('itemId') itemId: string,
+    @Body() updateItemDto: UpdatePhysicalInventoryItemDto,
+  ) {
+    return this.countingService.updatePhysicalInventoryItem(+physicalInventoryId, +itemId, updateItemDto);
   }
 }
 
