@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePreOrderDto } from './dto/create-pre-order.dto';
 import { UpdatePreOrderDto } from './dto/update-pre-order.dto';
@@ -8,26 +8,54 @@ export class PreOrdersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createPreOrderDto: CreatePreOrderDto) {
-    return this.prisma.preOrder.create({
-      data: {
-        orderId: createPreOrderDto.orderId,
-        orderLineId: createPreOrderDto.orderLineId,
-        productId: createPreOrderDto.productId,
-        quantity: createPreOrderDto.quantity,
-        expectedDate: createPreOrderDto.expectedDate ? new Date(createPreOrderDto.expectedDate) : null,
-        status: createPreOrderDto.status ?? 'PENDING',
-        notes: createPreOrderDto.notes,
-      },
-      include: {
-        order: {
-          include: {
-            customer: true,
-          },
+    try {
+      // Verify that the order exists
+      const order = await this.prisma.order.findUnique({
+        where: { id: createPreOrderDto.orderId },
+      });
+      if (!order) {
+        throw new BadRequestException(`Order with ID ${createPreOrderDto.orderId} not found`);
+      }
+
+      // Verify that the product exists
+      const product = await this.prisma.product.findUnique({
+        where: { id: createPreOrderDto.productId },
+      });
+      if (!product) {
+        throw new BadRequestException(`Product with ID ${createPreOrderDto.productId} not found`);
+      }
+
+      return await this.prisma.preOrder.create({
+        data: {
+          orderId: createPreOrderDto.orderId,
+          orderLineId: createPreOrderDto.orderLineId,
+          productId: createPreOrderDto.productId,
+          quantity: createPreOrderDto.quantity,
+          expectedDate: createPreOrderDto.expectedDate ? new Date(createPreOrderDto.expectedDate) : null,
+          status: createPreOrderDto.status ?? 'PENDING',
+          notes: createPreOrderDto.notes,
         },
-        orderLine: true,
-        product: true,
-      },
-    });
+        include: {
+          order: {
+            include: {
+              customer: true,
+            },
+          },
+          orderLine: true,
+          product: true,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error creating pre-order:', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (error.code === 'P2003') {
+        // Foreign key constraint failed
+        throw new BadRequestException('Invalid order or product ID. Please check that the order and product exist.');
+      }
+      throw new BadRequestException(`Failed to create pre-order: ${error.message || 'Unknown error'}`);
+    }
   }
 
   async findAll(orderId?: number, status?: string) {

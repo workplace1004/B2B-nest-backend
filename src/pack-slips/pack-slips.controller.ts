@@ -38,7 +38,13 @@ export class PackSlipsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdatePackSlipDto) {
-    return this.service.update(id, updateDto);
+    try {
+      return this.service.update(id, updateDto);
+    } catch (error: any) {
+      console.error('Pack Slip Update Error:', error);
+      console.error('Update DTO:', JSON.stringify(updateDto, null, 2));
+      throw error;
+    }
   }
 
   @Delete(':id')

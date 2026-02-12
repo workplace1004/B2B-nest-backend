@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsDateString } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsDateString, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum PackSlipStatus {
@@ -50,6 +50,10 @@ export class CreatePackSlipDto {
   @IsOptional()
   @IsDateString()
   packedAt?: string;
+
+  @IsOptional()
+  @IsNumber()
+  weight?: number;
 
   @IsOptional()
   @IsString()
