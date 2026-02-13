@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
@@ -77,10 +77,34 @@ export class StoresService {
 
   async remove(id: number) {
     await this.findOne(id);
-    await this.prisma.store.delete({
-      where: { id },
+    
+    // Check if store has related BOPIS orders
+    const bopisOrdersCount = await this.prisma.bOPISOrder.count({
+      where: { storeId: id },
     });
-    return { message: 'Store deleted successfully' };
+    
+    // Check if store has related BORIS returns
+    const borisReturnsCount = await this.prisma.bORISReturn.count({
+      where: { storeId: id },
+    });
+    
+    if (bopisOrdersCount > 0 || borisReturnsCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete store. It has ${bopisOrdersCount} BOPIS order(s) and ${borisReturnsCount} BORIS return(s) associated with it. Please remove or reassign these records first.`
+      );
+    }
+    
+    try {
+      await this.prisma.store.delete({
+        where: { id },
+      });
+      return { message: 'Store deleted successfully' };
+    } catch (error: any) {
+      if (error.code === 'P2003') {
+        throw new BadRequestException('Cannot delete store because it has related records. Please remove or reassign these records first.');
+      }
+      throw error;
+    }
   }
 }
 

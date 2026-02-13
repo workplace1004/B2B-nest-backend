@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { ReverseLogisticsService } from './reverse-logistics.service';
 import { CreateReverseLogisticsDto } from './dto/create-reverse-logistics.dto';
 import { UpdateReverseLogisticsDto } from './dto/update-reverse-logistics.dto';
@@ -30,17 +30,17 @@ export class ReverseLogisticsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: UpdateReverseLogisticsDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateDto: UpdateReverseLogisticsDto) {
     return this.service.update(id, updateDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.remove(id);
   }
 }
