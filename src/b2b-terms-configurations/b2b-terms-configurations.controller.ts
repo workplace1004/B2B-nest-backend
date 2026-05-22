@@ -1,10 +1,7 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { B2BTermsConfigurationsService } from './b2b-terms-configurations.service';
 import { UpdateB2BTermsConfigurationDto } from './dto/update-b2b-terms-configuration.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('b2b-terms-configurations')
-@UseGuards(JwtAuthGuard)
 export class B2BTermsConfigurationsController {
   constructor(private readonly b2bTermsConfigurationsService: B2BTermsConfigurationsService) {}
 

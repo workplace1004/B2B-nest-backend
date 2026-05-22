@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { BOPISOrdersService } from './bopis-orders.service';
 import { CreateBOPISOrderDto } from './dto/create-bopis-order.dto';
 import { UpdateBOPISOrderDto } from './dto/update-bopis-order.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('bopis-orders')
-@UseGuards(JwtAuthGuard)
 export class BOPISOrdersController {
   constructor(private readonly bopisOrdersService: BOPISOrdersService) {}
 

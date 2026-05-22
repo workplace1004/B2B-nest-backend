@@ -1,12 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { IntegrationsService } from './integrations.service';
 import { CreateIntegrationDto } from './dto/create-integration.dto';
 import { UpdateIntegrationDto } from './dto/update-integration.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ChannelSyncService, SyncResult } from '../channel-sync/channel-sync.service';
 
 @Controller('integrations')
-@UseGuards(JwtAuthGuard)
 export class IntegrationsController {
   constructor(
     private readonly integrationsService: IntegrationsService,

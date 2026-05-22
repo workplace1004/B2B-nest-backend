@@ -1,11 +1,9 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { StockControlConfigurationsService } from './stock-control-configurations.service';
 import { UpdateStockControlConfigurationDto } from './dto/update-stock-control-configuration.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { StockControlConfigurationType } from '@prisma/client';
 
 @Controller('stock-control-configurations')
-@UseGuards(JwtAuthGuard)
 export class StockControlConfigurationsController {
   constructor(private readonly stockControlConfigurationsService: StockControlConfigurationsService) {}
 

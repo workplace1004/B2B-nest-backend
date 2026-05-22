@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ReplenishmentService } from './replenishment.service';
 import { CreateReplenishmentDto } from './dto/create-replenishment.dto';
 import { UpdateReplenishmentDto } from './dto/update-replenishment.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('replenishment')
-@UseGuards(JwtAuthGuard)
 export class ReplenishmentController {
   constructor(private readonly replenishmentService: ReplenishmentService) {}
 

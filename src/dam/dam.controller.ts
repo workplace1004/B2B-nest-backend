@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { DAMService } from './dam.service';
 import { CreateDAMAssetDto } from './dto/create-dam-asset.dto';
 import { UpdateDAMAssetDto } from './dto/update-dam-asset.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('dam')
-@UseGuards(JwtAuthGuard)
 export class DAMController {
   constructor(private readonly damService: DAMService) {}
 

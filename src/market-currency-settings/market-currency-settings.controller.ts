@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { MarketCurrencySettingsService } from './market-currency-settings.service';
 import { CreateMarketCurrencySettingDto } from './dto/create-market-currency-setting.dto';
 import { UpdateMarketCurrencySettingDto } from './dto/update-market-currency-setting.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('market-currency-settings')
-@UseGuards(JwtAuthGuard)
 export class MarketCurrencySettingsController {
   constructor(private readonly marketCurrencySettingsService: MarketCurrencySettingsService) {}
 

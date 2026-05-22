@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { SizeFitService } from './size-fit.service';
 import { CreateSizeChartDto } from './dto/create-size-chart.dto';
 import { UpdateSizeChartDto } from './dto/update-size-chart.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('size-fit')
-@UseGuards(JwtAuthGuard)
 export class SizeFitController {
   constructor(private readonly sizeFitService: SizeFitService) {}
 

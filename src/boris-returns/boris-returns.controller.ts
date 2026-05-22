@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { BORISReturnsService } from './boris-returns.service';
 import { CreateBORISReturnDto } from './dto/create-boris-return.dto';
 import { UpdateBORISReturnDto } from './dto/update-boris-return.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('boris-returns')
-@UseGuards(JwtAuthGuard)
 export class BORISReturnsController {
   constructor(private readonly borisReturnsService: BORISReturnsService) {}
 

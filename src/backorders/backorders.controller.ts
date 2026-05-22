@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { BackordersService } from './backorders.service';
 import { CreateBackorderDto } from './dto/create-backorder.dto';
 import { UpdateBackorderDto } from './dto/update-backorder.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('backorders')
-@UseGuards(JwtAuthGuard)
 export class BackordersController {
   constructor(private readonly backordersService: BackordersService) {}
 

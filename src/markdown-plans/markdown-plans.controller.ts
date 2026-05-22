@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { MarkdownPlansService } from './markdown-plans.service';
 import { CreateMarkdownPlanDto } from './dto/create-markdown-plan.dto';
 import { UpdateMarkdownPlanDto } from './dto/update-markdown-plan.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('markdown-plans')
-@UseGuards(JwtAuthGuard)
 export class MarkdownPlansController {
   constructor(private readonly markdownPlansService: MarkdownPlansService) {}
 

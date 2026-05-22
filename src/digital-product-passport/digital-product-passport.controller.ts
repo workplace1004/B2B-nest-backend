@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { DigitalProductPassportService } from './digital-product-passport.service';
 import { CreateDigitalProductPassportDto } from './dto/create-digital-product-passport.dto';
 import { UpdateDigitalProductPassportDto } from './dto/update-digital-product-passport.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('digital-product-passport')
-@UseGuards(JwtAuthGuard)
 export class DigitalProductPassportController {
   constructor(private readonly service: DigitalProductPassportService) {}
 

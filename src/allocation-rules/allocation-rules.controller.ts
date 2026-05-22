@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { AllocationRulesService } from './allocation-rules.service';
 import { CreateAllocationRuleDto } from './dto/create-allocation-rule.dto';
 import { UpdateAllocationRuleDto } from './dto/update-allocation-rule.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('allocation-rules')
-@UseGuards(JwtAuthGuard)
 export class AllocationRulesController {
   constructor(private readonly allocationRulesService: AllocationRulesService) {}
 

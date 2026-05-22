@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { SalesRepCommissionsService } from './sales-rep-commissions.service';
 import { CreateSalesRepCommissionDto } from './dto/create-sales-rep-commission.dto';
 import { UpdateSalesRepCommissionDto } from './dto/update-sales-rep-commission.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('sales-rep-commissions')
-@UseGuards(JwtAuthGuard)
 export class SalesRepCommissionsController {
   constructor(private readonly salesRepCommissionsService: SalesRepCommissionsService) {}
 

@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { FeaturedCollectionsService } from './featured-collections.service';
 import { CreateFeaturedCollectionDto } from './dto/create-featured-collection.dto';
 import { UpdateFeaturedCollectionDto } from './dto/update-featured-collection.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('featured-collections')
-@UseGuards(JwtAuthGuard)
 export class FeaturedCollectionsController {
   constructor(private readonly featuredCollectionsService: FeaturedCollectionsService) {}
 

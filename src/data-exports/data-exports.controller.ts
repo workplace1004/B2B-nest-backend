@@ -1,12 +1,10 @@
-import { Controller, Get, Post, Delete, Param, Query, Body, UseGuards, Request, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Query, Body, Request, Res, NotFoundException } from '@nestjs/common';
 import { DataExportsService } from './data-exports.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Controller('data-exports')
-@UseGuards(JwtAuthGuard)
 export class DataExportsController {
   constructor(private readonly dataExportsService: DataExportsService) {}
 

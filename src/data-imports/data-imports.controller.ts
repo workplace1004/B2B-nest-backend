@@ -1,13 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, UseInterceptors, UploadedFile, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseInterceptors, UploadedFile, Request } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { DataImportsService } from './data-imports.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Express } from 'express';
 
 @Controller('data-imports')
-@UseGuards(JwtAuthGuard)
 export class DataImportsController {
   constructor(private readonly dataImportsService: DataImportsService) {}
 

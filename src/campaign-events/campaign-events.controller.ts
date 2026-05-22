@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CampaignEventsService } from './campaign-events.service';
 import { CreateCampaignEventDto } from './dto/create-campaign-event.dto';
 import { UpdateCampaignEventDto } from './dto/update-campaign-event.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('campaign-events')
-@UseGuards(JwtAuthGuard)
 export class CampaignEventsController {
   constructor(private readonly campaignEventsService: CampaignEventsService) {}
 

@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { SalesRepTerritoriesService } from './sales-rep-territories.service';
 import { CreateSalesRepTerritoryDto } from './dto/create-sales-rep-territory.dto';
 import { UpdateSalesRepTerritoryDto } from './dto/update-sales-rep-territory.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('sales-rep-territories')
-@UseGuards(JwtAuthGuard)
 export class SalesRepTerritoriesController {
   constructor(private readonly salesRepTerritoriesService: SalesRepTerritoriesService) {}
 

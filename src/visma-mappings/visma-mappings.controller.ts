@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { VismaMappingsService } from './visma-mappings.service';
 import { CreateVismaMappingDto } from './dto/create-visma-mapping.dto';
 import { UpdateVismaMappingDto } from './dto/update-visma-mapping.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('visma-mappings')
-@UseGuards(JwtAuthGuard)
 export class VismaMappingsController {
   constructor(private readonly vismaMappingsService: VismaMappingsService) {}
 

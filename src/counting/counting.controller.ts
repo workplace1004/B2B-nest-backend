@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CountingService } from './counting.service';
 import { CreateCycleCountDto } from './dto/create-cycle-count.dto';
 import { UpdateCycleCountDto } from './dto/update-cycle-count.dto';
@@ -6,10 +6,7 @@ import { CreatePhysicalInventoryDto } from './dto/create-physical-inventory.dto'
 import { UpdatePhysicalInventoryDto } from './dto/update-physical-inventory.dto';
 import { UpdateCycleCountItemDto } from './dto/update-cycle-count-item.dto';
 import { UpdatePhysicalInventoryItemDto } from './dto/update-physical-inventory-item.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('counting')
-@UseGuards(JwtAuthGuard)
 export class CountingController {
   constructor(private readonly countingService: CountingService) {}
 

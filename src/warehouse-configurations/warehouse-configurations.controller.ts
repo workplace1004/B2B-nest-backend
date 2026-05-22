@@ -1,11 +1,9 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { WarehouseConfigurationsService } from './warehouse-configurations.service';
 import { UpdateWarehouseConfigurationDto } from './dto/update-warehouse-configuration.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WarehouseConfigurationType } from '@prisma/client';
 
 @Controller('warehouse-configurations')
-@UseGuards(JwtAuthGuard)
 export class WarehouseConfigurationsController {
   constructor(private readonly warehouseConfigurationsService: WarehouseConfigurationsService) {}
 

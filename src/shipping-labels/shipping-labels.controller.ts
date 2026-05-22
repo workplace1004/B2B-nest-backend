@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ShippingLabelsService } from './shipping-labels.service';
 import { CreateShippingLabelDto } from './dto/create-shipping-label.dto';
 import { UpdateShippingLabelDto } from './dto/update-shipping-label.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('shipping-labels')
-@UseGuards(JwtAuthGuard)
 export class ShippingLabelsController {
   constructor(private readonly service: ShippingLabelsService) {}
 

@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { LandedCostsService } from './landed-costs.service';
 import { CreateLandedCostDto } from './dto/create-landed-cost.dto';
 import { UpdateLandedCostDto } from './dto/update-landed-cost.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('landed-costs')
-@UseGuards(JwtAuthGuard)
 export class LandedCostsController {
   constructor(private readonly service: LandedCostsService) {}
 

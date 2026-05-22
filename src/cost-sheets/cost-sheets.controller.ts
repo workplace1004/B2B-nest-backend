@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CostSheetsService } from './cost-sheets.service';
 import { CreateCostSheetDto } from './dto/create-cost-sheet.dto';
 import { UpdateCostSheetDto } from './dto/update-cost-sheet.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('cost-sheets')
-@UseGuards(JwtAuthGuard)
 export class CostSheetsController {
   constructor(private readonly costSheetsService: CostSheetsService) {}
 

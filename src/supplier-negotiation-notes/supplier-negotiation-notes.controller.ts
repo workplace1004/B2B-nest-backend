@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { SupplierNegotiationNotesService } from './supplier-negotiation-notes.service';
 import { CreateSupplierNegotiationNoteDto } from './dto/create-supplier-negotiation-note.dto';
 import { UpdateSupplierNegotiationNoteDto } from './dto/update-supplier-negotiation-note.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('supplier-negotiation-notes')
-@UseGuards(JwtAuthGuard)
 export class SupplierNegotiationNotesController {
   constructor(private readonly service: SupplierNegotiationNotesService) {}
 

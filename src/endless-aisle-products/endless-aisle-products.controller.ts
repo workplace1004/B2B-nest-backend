@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { EndlessAisleProductsService } from './endless-aisle-products.service';
 import { CreateEndlessAisleProductDto } from './dto/create-endless-aisle-product.dto';
 import { UpdateEndlessAisleProductDto } from './dto/update-endless-aisle-product.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('endless-aisle-products')
-@UseGuards(JwtAuthGuard)
 export class EndlessAisleProductsController {
   constructor(private readonly endlessAisleProductsService: EndlessAisleProductsService) {}
 

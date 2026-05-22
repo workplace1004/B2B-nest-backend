@@ -1,9 +1,6 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { FxRatesService } from './fx-rates.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('fx-rates')
-@UseGuards(JwtAuthGuard)
 export class FxRatesController {
   constructor(private readonly fxRatesService: FxRatesService) {}
 

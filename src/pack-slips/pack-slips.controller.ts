@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { PackSlipsService } from './pack-slips.service';
 import { CreatePackSlipDto } from './dto/create-pack-slip.dto';
 import { UpdatePackSlipDto } from './dto/update-pack-slip.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('pack-slips')
-@UseGuards(JwtAuthGuard)
 export class PackSlipsController {
   constructor(private readonly service: PackSlipsService) {}
 

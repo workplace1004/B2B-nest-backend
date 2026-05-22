@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { PreOrdersService } from './pre-orders.service';
 import { CreatePreOrderDto } from './dto/create-pre-order.dto';
 import { UpdatePreOrderDto } from './dto/update-pre-order.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('pre-orders')
-@UseGuards(JwtAuthGuard)
 export class PreOrdersController {
   constructor(private readonly preOrdersService: PreOrdersService) {}
 

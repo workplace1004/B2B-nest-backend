@@ -1,9 +1,6 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { CurrenciesService } from './currencies.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('currencies')
-@UseGuards(JwtAuthGuard)
 export class CurrenciesController {
   constructor(private readonly currenciesService: CurrenciesService) {}
 

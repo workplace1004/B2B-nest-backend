@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { PartialShipmentsService } from './partial-shipments.service';
 import { CreatePartialShipmentDto } from './dto/create-partial-shipment.dto';
 import { UpdatePartialShipmentDto } from './dto/update-partial-shipment.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('partial-shipments')
-@UseGuards(JwtAuthGuard)
 export class PartialShipmentsController {
   constructor(private readonly partialShipmentsService: PartialShipmentsService) {}
 

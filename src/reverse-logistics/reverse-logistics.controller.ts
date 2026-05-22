@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ReverseLogisticsService } from './reverse-logistics.service';
 import { CreateReverseLogisticsDto } from './dto/create-reverse-logistics.dto';
 import { UpdateReverseLogisticsDto } from './dto/update-reverse-logistics.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('reverse-logistics')
-@UseGuards(JwtAuthGuard)
 export class ReverseLogisticsController {
   constructor(private readonly service: ReverseLogisticsService) {}
 

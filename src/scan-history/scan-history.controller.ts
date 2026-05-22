@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ScanHistoryService } from './scan-history.service';
 import { CreateScanHistoryDto } from './dto/create-scan-history.dto';
 import { UpdateScanHistoryDto } from './dto/update-scan-history.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('scan-history')
-@UseGuards(JwtAuthGuard)
 export class ScanHistoryController {
   constructor(private readonly service: ScanHistoryService) {}
 

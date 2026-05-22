@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { PurchaseOrderBatchesService } from './purchase-order-batches.service';
 import { CreatePurchaseOrderBatchDto } from './dto/create-purchase-order-batch.dto';
 import { UpdatePurchaseOrderBatchDto } from './dto/update-purchase-order-batch.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('purchase-order-batches')
-@UseGuards(JwtAuthGuard)
 export class PurchaseOrderBatchesController {
   constructor(private readonly service: PurchaseOrderBatchesService) {}
 

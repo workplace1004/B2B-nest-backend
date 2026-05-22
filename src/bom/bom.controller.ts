@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { BOMService } from './bom.service';
 import { CreateBOMDto } from './dto/create-bom.dto';
 import { UpdateBOMDto } from './dto/update-bom.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('bom')
-@UseGuards(JwtAuthGuard)
 export class BOMController {
   constructor(private readonly bomService: BOMService) {}
 

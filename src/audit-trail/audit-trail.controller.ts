@@ -1,9 +1,6 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { AuditTrailService } from './audit-trail.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('audit-trail')
-@UseGuards(JwtAuthGuard)
 export class AuditTrailController {
   constructor(private readonly auditTrailService: AuditTrailService) {}
 

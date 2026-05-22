@@ -1,11 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ComplianceEvidenceService } from './compliance-evidence.service';
 import { CreateComplianceEvidenceDto } from './dto/create-compliance-evidence.dto';
 import { UpdateComplianceEvidenceDto } from './dto/update-compliance-evidence.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 @Controller('compliance-evidence')
-@UseGuards(JwtAuthGuard)
 export class ComplianceEvidenceController {
   constructor(private readonly service: ComplianceEvidenceService) {}
 
